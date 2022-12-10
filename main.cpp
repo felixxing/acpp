@@ -155,6 +155,7 @@ int main(int argc, char** argv)
             glViewport(0, 0, fbo.w, fbo.h);
 
             mmm.draw(mmm_shader);
+            glDisable(GL_BLEND);
 
             fbo.unbind();
             glDisable(GL_DEPTH_TEST);
@@ -163,8 +164,8 @@ int main(int argc, char** argv)
         light_ssbo.load();
         light_pass.use();
 
-        glUniform1i(light_pass.uniform("position"), 0);
-        glUniform1i(light_pass.uniform("normal"), 1);
+        glUniform1i(light_pass.uniform("positions"), 0);
+        glUniform1i(light_pass.uniform("normals"), 1);
         glUniform1i(light_pass.uniform("colors"), 2);
         glUniform1i(light_pass.uniform("specs"), 3);
         glUniform3fv(light_pass.uniform("camera_pos"), 1, camera.position_gl());
