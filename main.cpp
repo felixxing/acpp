@@ -13,18 +13,6 @@
 #include "camera.hpp"
 #include "lights.hpp"
 
-template <int aa>
-class aav
-{
-    int ccc[aa];
-
-  public:
-    void out()
-    {
-        std::cout << sizeof(ccc[0]) << std::endl;
-    }
-};
-
 int main(int argc, char** argv)
 {
     GLWindow glfw(1920, 1080);
