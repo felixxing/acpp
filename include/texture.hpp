@@ -115,8 +115,12 @@ class Texture
 
     void unbind()
     {
-        glBindTextureUnit(slot_in, 0);
-        binded = false;
+        if (binded)
+        {
+            glBindTextureUnit(slot_in, 0);
+            binded = false;
+            slot_in = 0;
+        }
     }
 
     GLID get_id() const
