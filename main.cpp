@@ -72,6 +72,7 @@ int main(int argc, char** argv)
 
     LightBlock lb;
     lb.pt_lights_count = 1;
+    lb.dir_lights_count = 1;
 
     ShaderStorage light_ssbo(sizeof(lb), 2, &lb);
 
@@ -174,7 +175,7 @@ int main(int argc, char** argv)
         fbo.textures[1]->bind(1);
         fbo.textures[2]->bind(2);
         fbo.textures[3]->bind(3);
-        fbo_screen.draw(fbo.w / 4, 0, 3 * fbo.w / 4, fbo.h);
+        fbo_screen.draw(fbo.w / 4, 0, 3 * fbo.w / 4, 3 * fbo.h / 4);
         fbo.textures[0]->unbind();
         fbo.textures[1]->unbind();
         fbo.textures[2]->unbind();

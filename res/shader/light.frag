@@ -35,7 +35,16 @@ struct PtLight
     float quadratic;
 };
 
-vec3 get_pt_light(vec3 fpos, vec3 fnormal, vec3 fcolor, vec3 fspec, PtLight pt_light);
+struct DirLight
+{
+    vec3 direction;
+    vec3 color;
+
+    float strength;
+};
+
+vec3 get_pt_light(vec3 view_dir, vec3 fpos, vec3 fnormal, vec3 fcolor, vec3 fspec, PtLight pt_light);
+vec3 get_dir_light(vec3 view_dir, vec3 fnormal, vec3 fcolor, vec3 fspec, DirLight dir_light);
 
 void main()
 {
@@ -43,6 +52,8 @@ void main()
     vec3 normal = normalize(texture(normals, light_fs_in.uv).rgb);
     vec3 frag_color = texture(colors, light_fs_in.uv).rgb;
     vec3 frag_spec = texture(specs, light_fs_in.uv).rgb;
+
+    vec3 view_dir = normalize(camera_pos - frag_pos);
 
     vec3 light_result = vec3(0);
     for (int i = 0; i < pt_lights_count; i++)
@@ -55,15 +66,24 @@ void main()
         ppt_light.linear = pt_lights[i][8];
         ppt_light.quadratic = pt_lights[i][9];
 
-        light_result += get_pt_light(frag_pos, normal, frag_color, frag_spec, ppt_light);
+        light_result += get_pt_light(view_dir, frag_pos, normal, frag_color, frag_spec, ppt_light);
+    }
+
+    for (int i = 0; i < dir_light_count; i++)
+    {
+        DirLight ddir_light;
+        ddir_light.direction = vec3(dir_lights[i][0], dir_lights[i][1], dir_lights[i][2]);
+        ddir_light.color = vec3(dir_lights[i][3], dir_lights[i][4], dir_lights[i][5]);
+        ddir_light.strength = dir_lights[i][6];
+
+        light_result += get_dir_light(view_dir, normal, frag_color, frag_spec, ddir_light);
     }
 
     result = vec4(light_result, 1.0);
 }
 
-vec3 get_pt_light(vec3 fpos, vec3 fnormal, vec3 fcolor, vec3 fspec, PtLight pt_light)
+vec3 get_pt_light(vec3 view_dir, vec3 fpos, vec3 fnormal, vec3 fcolor, vec3 fspec, PtLight pt_light)
 {
-    vec3 view_dir = normalize(camera_pos - fpos);
     vec3 light_dir = normalize(pt_light.position - fpos);
 
     vec3 half_way = normalize(light_dir + view_dir);
@@ -77,4 +97,18 @@ vec3 get_pt_light(vec3 fpos, vec3 fnormal, vec3 fcolor, vec3 fspec, PtLight pt_l
     vec3 specular = spec * fspec;
 
     return pt_light.color * pt_light.strength * attenuation * (diffuse + ambient + specular);
+}
+
+vec3 get_dir_light(vec3 view_dir, vec3 fnormal, vec3 fcolor, vec3 fspec, DirLight dir_light)
+{
+    vec3 light_dir = -normalize(dir_light.direction);
+
+    vec3 reflectDir = reflect(-light_dir, fnormal);
+    float spec = pow(max(dot(fnormal, reflectDir), 0.0), 32.0);
+
+    vec3 ambient = fcolor * 0.1;
+    vec3 diffuse = max(dot(fnormal, light_dir), 0.0) * fcolor;
+    vec3 specular = spec * fspec;
+
+    return 0.5 * dir_light.color * dir_light.strength * (diffuse + ambient + specular);
 }
