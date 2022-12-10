@@ -71,8 +71,8 @@ int main(int argc, char** argv)
     camera_ubo.add_data<glm::mat4>(camera.proj_gl());
 
     LightBlock lb;
-    lb.pt_lights_count = 1;
     lb.dir_lights_count = 1;
+    lb.dir_lights[0].strength = 2;
 
     ShaderStorage light_ssbo(sizeof(lb), 2, &lb);
 
