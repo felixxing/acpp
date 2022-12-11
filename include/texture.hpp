@@ -68,6 +68,8 @@ class Texture
             glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTextureParameteri(id, GL_TEXTURE_WRAP_S, wrap);
             glTextureParameteri(id, GL_TEXTURE_WRAP_T, wrap);
+            static float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+            glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
             glTextureStorage2D(id, levels, internal_format, w, h);
             glTextureSubImage2D(id, 0, 0, 0, w, h, tex_format, GL_UNSIGNED_BYTE, data);
@@ -98,6 +100,8 @@ class Texture
         glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, filter);
         glTextureParameteri(id, GL_TEXTURE_WRAP_S, wrap);
         glTextureParameteri(id, GL_TEXTURE_WRAP_T, wrap);
+        static float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
         glTextureStorage2D(id, 1, internal_format, w, h);
         return;

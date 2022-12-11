@@ -4,14 +4,16 @@ layout(location = 0) out vec4 position;
 layout(location = 1) out vec4 normal;
 layout(location = 2) out vec4 colors;
 layout(location = 3) out vec4 specs;
+layout(location = 4) out vec4 light_space;
 
 // ins
 in VS_OUT
 {
     vec3 frag_pos;
     vec3 normals;
-    vec4 colors;
     vec3 uvs;
+    vec4 colors;
+    vec4 light_pos;
 }
 fs_in;
 
@@ -35,4 +37,8 @@ void main()
     colors = fs_in.colors * texture(diff_map, fs_in.uvs.xy);
 
     specs = fs_in.colors * texture(spec_map, fs_in.uvs.xy);
+
+    float light_space_depth;
+    vec3 proj_coord = vec3(fs_in.light_pos.xyz / fs_in.light_pos.w);
+    light_space = vec4(proj_coord, 1.0);
 }

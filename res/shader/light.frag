@@ -21,7 +21,9 @@ uniform sampler2D positions;
 uniform sampler2D normals;
 uniform sampler2D colors;
 uniform sampler2D specs;
+uniform sampler2D proj_coords;
 
+uniform sampler2D shadows;
 uniform vec3 camera_pos;
 
 struct PtLight
@@ -45,6 +47,7 @@ struct DirLight
 
 vec3 get_pt_light(vec3 view_dir, vec3 fpos, vec3 fnormal, vec3 fcolor, vec3 fspec, PtLight pt_light);
 vec3 get_dir_light(vec3 view_dir, vec3 fnormal, vec3 fcolor, vec3 fspec, DirLight dir_light);
+float get_shadow(vec3 proj_cod, float bias);
 
 void main()
 {
@@ -110,5 +113,26 @@ vec3 get_dir_light(vec3 view_dir, vec3 fnormal, vec3 fcolor, vec3 fspec, DirLigh
     vec3 diffuse = max(dot(fnormal, light_dir), 0.0) * fcolor;
     vec3 specular = spec * fspec;
 
-    return 0.5 * dir_light.color * dir_light.strength * (diffuse + ambient + specular);
+    vec3 proj_coord = texture(proj_coords, light_fs_in.uv).rgb;
+    float bias = max(0.001 * (1.0 - dot(fnormal, light_dir)), 0.0004);
+    float shadow = get_shadow(proj_coord, bias);
+    return 0.5 * dir_light.color * dir_light.strength * ((1 - shadow) * (diffuse + specular) + ambient);
+}
+
+float get_shadow(vec3 proj_cod, float bias)
+{
+    proj_cod = proj_cod * 0.5 + 0.5;
+
+    float closestDepth = texture(shadows, proj_cod.xy).r;
+    // get depth of current fragment from light's perspective
+    float currentDepth = proj_cod.z;
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+
+    if (proj_cod.z >= 1.0)
+    {
+        shadow = 0.0;
+    }
+
+    return shadow;
 }

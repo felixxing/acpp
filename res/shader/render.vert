@@ -16,17 +16,21 @@ out VS_OUT
 {
     vec3 frag_pos;
     vec3 normals;
-    vec4 colors;
     vec3 uvs;
+    vec4 colors;
+    vec4 light_pos;
 }
 vs_out;
+
+uniform mat4 light_space;
 
 void main()
 {
     vs_out.frag_pos = vec3(model * vec4(position, 1.0));
     vs_out.normals = mat3(transpose(inverse(model))) * normals;
-    vs_out.colors = colors;
     vs_out.uvs = uvs;
+    vs_out.colors = colors;
+    vs_out.light_pos = light_space * vec4(vs_out.frag_pos, 1.0);
 
     gl_Position = proj * view * vec4(vs_out.frag_pos, 1.0);
 }
