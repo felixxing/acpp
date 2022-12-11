@@ -4,99 +4,6 @@
 #include "gls.hpp"
 #include "texture.hpp"
 
-class FrameBuff
-{
-  private:
-    GLID id;
-    GLID rbo;
-
-  public:
-    int w, h;
-
-    // they shoudl not be use to determine the state of framebuff
-    static GLenum tex_format;
-    static GLenum internal_format;
-    static GLenum filter;
-    static GLenum wrap;
-    static GLenum attachment;
-
-    std::vector<Texture*> textures;
-
-    static void reset_attrib()
-    {
-        FrameBuff::tex_format = GL_RGBA;
-        FrameBuff::internal_format = GL_RGBA16F;
-        FrameBuff::filter = GL_LINEAR;
-        FrameBuff::wrap = GL_REPEAT;
-        FrameBuff::attachment = GL_COLOR_ATTACHMENT0;
-    }
-
-    FrameBuff(int wa, int ha)
-        : w(wa),
-          h(ha)
-    {
-        glCreateFramebuffers(1, &id);
-    }
-
-    ~FrameBuff()
-    {
-        glDeleteFramebuffers(1, &id);
-        for (int i = 0; i < textures.size(); i++)
-        {
-            delete textures[i];
-        }
-    }
-
-    void attach_texture()
-    {
-        textures.push_back(new Texture);
-        Texture::tex_format = tex_format;
-        Texture::internal_format = internal_format;
-        Texture::filter = filter;
-        Texture::wrap = wrap;
-
-        textures.back()->load(w, h);
-        glNamedFramebufferTexture(id, attachment, textures.back()->get_id(), 0);
-
-        Texture::rest_attrib();
-        FrameBuff::reset_attrib();
-    }
-
-    void load_draws(std::vector<GLenum> buffers)
-    {
-        glNamedFramebufferDrawBuffers(id, buffers.size(), buffers.data());
-    }
-
-    void attach_rbo(GLenum attachment, GLenum format)
-    {
-        glCreateRenderbuffers(1, &rbo);
-        glNamedRenderbufferStorage(rbo, format, w, h);
-        glNamedFramebufferRenderbuffer(id, attachment, GL_RENDERBUFFER, rbo);
-    }
-
-    bool validate()
-    {
-        bool result = (glCheckNamedFramebufferStatus(id, GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
-        return result;
-    }
-
-    void bind()
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, id);
-    }
-
-    void unbind()
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
-};
-
-inline GLenum FrameBuff::tex_format = GL_RGBA;
-inline GLenum FrameBuff::internal_format = GL_RGBA16F;
-inline GLenum FrameBuff::filter = GL_LINEAR;
-inline GLenum FrameBuff::wrap = GL_REPEAT;
-inline GLenum FrameBuff::attachment = GL_COLOR_ATTACHMENT0;
-
 class ScreenRect
 {
   private:
@@ -143,6 +50,68 @@ class ScreenRect
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glBindVertexArray(0);
+    }
+};
+
+class Framebuffer
+{
+  private:
+    GLID id;
+
+  public:
+    int w, h;
+    std::vector<Texture2D*> textures;
+    std::vector<GLID> rbos;
+
+    Framebuffer(int wa, int ha)
+        : w(wa),
+          h(ha)
+    {
+        glCreateFramebuffers(1, &id);
+    }
+
+    ~Framebuffer()
+    {
+        glDeleteFramebuffers(1, &id);
+        for (int i = 0; i < textures.size(); i++)
+        {
+            delete textures[i];
+        }
+    }
+
+    void attach_texture(Texture2DCreateInfo create_info, GLenum attachment)
+    {
+        textures.push_back(new Texture2D());
+        textures.back()->create(create_info);
+        glNamedFramebufferTexture(id, attachment, textures.back()->get_id(), 0);
+    }
+
+    void attach_rbo(GLenum attachment, GLenum format)
+    {
+        rbos.push_back(0);
+        glCreateRenderbuffers(1, &rbos.back());
+        glNamedRenderbufferStorage(rbos.back(), format, w, h);
+        glNamedFramebufferRenderbuffer(id, attachment, GL_RENDERBUFFER, rbos.back());
+    }
+
+    void draw_buffers(std::vector<GLenum> bufs)
+    {
+        glNamedFramebufferDrawBuffers(id, bufs.size(), bufs.data());
+    }
+
+    bool validate()
+    {
+        return (glCheckNamedFramebufferStatus(id, GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+    }
+
+    void bind()
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, id);
+    }
+
+    void unbind()
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 };
 

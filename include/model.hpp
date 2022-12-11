@@ -44,34 +44,22 @@ class Model
         {
             materials[i] = new Material;
 
-            Texture::tex_format = GL_RGBA;
-            Texture::internal_format = GL_RGBA16F;
-            Texture::filter = GL_LINEAR_MIPMAP_LINEAR;
-            Texture::wrap = GL_REPEAT;
+            Texture2DCreateInfo material_info;
 
             scene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &rel_path);
-            materials[i]->diff_map.load(prev_path + rel_path.C_Str());
+            materials[i]->diff_map.create(material_info, prev_path + rel_path.C_Str());
 
             scene->mMaterials[i]->GetTexture(aiTextureType_SPECULAR, 0, &rel_path);
-            materials[i]->spec_map.load(prev_path + rel_path.C_Str());
+            materials[i]->spec_map.create(material_info, prev_path + rel_path.C_Str());
 
             scene->mMaterials[i]->GetTexture(aiTextureType_AMBIENT, 0, &rel_path);
-            materials[i]->ambi_map.load(prev_path + rel_path.C_Str());
+            materials[i]->ambi_map.create(material_info, prev_path + rel_path.C_Str());
 
             scene->mMaterials[i]->GetTexture(aiTextureType_EMISSIVE, 0, &rel_path);
-            materials[i]->emis_map.load(prev_path + rel_path.C_Str());
+            materials[i]->emis_map.create(material_info, prev_path + rel_path.C_Str());
 
-            Texture::filter = GL_LINEAR;
             scene->mMaterials[i]->GetTexture(aiTextureType_OPACITY, 0, &rel_path);
-            if (rel_path.length <= 0)
-            {
-                materials[i]->opac_map.load("res/textures/white.png", 1);
-            }
-            else
-            {
-                materials[i]->opac_map.load(prev_path + rel_path.C_Str(), 1);
-            }
-            Texture::rest_attrib();
+            materials[i]->opac_map.create(material_info, prev_path + rel_path.C_Str());
         }
     }
 

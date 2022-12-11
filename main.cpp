@@ -23,18 +23,24 @@ int main(int argc, char** argv)
     glfw.set_hint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
     glfw.load("deffer shading");
 
-    Texture default_tex;
-    default_tex.load("res/textures/default_texture.png");
-    Texture::default_texture = &default_tex;
+    Texture2D default_tex2d;
+    Texture2DCreateInfo create_info;
+    default_tex2d.create(create_info, "res/textures/white.png");
+    Texture2D::default_texture = &default_tex2d;
 
-    FrameBuff fbo(1920, 1080);
+    Framebuffer gbuffer(1920, 1080);
     for (int i = 0; i < 4; i++)
     {
-        fbo.attachment = GL_COLOR_ATTACHMENT0 + i;
-        fbo.attach_texture();
+        Texture2DCreateInfo create_info;
+        create_info.levels = 1;
+        create_info.min_filter = GL_LINEAR;
+        create_info.width = gbuffer.w;
+        create_info.height = gbuffer.h;
+        gbuffer.attach_texture(create_info, GL_COLOR_ATTACHMENT0 + i);
     }
-    fbo.load_draws({GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3});
-    fbo.attach_rbo(GL_DEPTH_STENCIL_ATTACHMENT, GL_DEPTH24_STENCIL8);
+    gbuffer.attach_rbo(GL_DEPTH_ATTACHMENT, GL_DEPTH24_STENCIL8);
+    gbuffer.draw_buffers({GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3});
+    bool gbuffer_validation = gbuffer.validate();
 
     ScreenRect fbo_screen;
 
@@ -78,7 +84,6 @@ int main(int argc, char** argv)
     lb.dir_lights_count = 1;
     lb.dir_lights[0].strength = 2;
     lb.dir_lights[0].direction = {-10.0f, -10.0, -10.0f};
-
     ShaderStorage light_ssbo(sizeof(lb), 2, &lb);
 
     double m_x = 0;
@@ -90,13 +95,18 @@ int main(int argc, char** argv)
     // shadow works
     const int shadow_w = 8102;
     const int shadow_h = 8102;
-    FrameBuff depth_fbo(shadow_w, shadow_h);
-    FrameBuff::attachment = GL_DEPTH_ATTACHMENT;
-    FrameBuff::tex_format = GL_DEPTH_COMPONENT;
-    FrameBuff::internal_format = GL_DEPTH_COMPONENT32F;
-    FrameBuff::wrap = GL_CLAMP_TO_BORDER;
-    depth_fbo.attach_texture();
-    bool val_dfbo = depth_fbo.validate();
+    Framebuffer depth_buffer(shadow_w, shadow_h);
+    Texture2DCreateInfo depth_create_info;
+    depth_create_info.internal_format = GL_DEPTH_COMPONENT32F;
+    depth_create_info.wrap_s = GL_CLAMP_TO_BORDER;
+    depth_create_info.wrap_r = GL_CLAMP_TO_BORDER;
+    depth_create_info.wrap_t = GL_CLAMP_TO_BORDER;
+    depth_create_info.min_filter = GL_LINEAR;
+    depth_create_info.width = shadow_w;
+    depth_create_info.height = shadow_h;
+    depth_create_info.levels = 1;
+    depth_buffer.attach_texture(depth_create_info, GL_DEPTH_ATTACHMENT);
+    bool depth_buffer_validation = depth_buffer.validate();
 
     Shader depth_shader;
     depth_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/shadow.vert");
@@ -167,7 +177,7 @@ int main(int argc, char** argv)
 
         camera.update();
         camera_ubo.load();
-        float near_plane = 1.0f, far_plane = 25.0f;
+        float near_plane = 1.0f, far_plane = 40.0f;
         glm::mat4 lightProjection = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, near_plane, far_plane);
         glm::mat4 lightView = glm::lookAt(-lb.dir_lights[0].direction, //
                                           glm::vec3(0.0f, 0.0f, 0.0f), //
@@ -177,24 +187,24 @@ int main(int argc, char** argv)
         {
             glEnable(GL_DEPTH_TEST);
 
-            depth_fbo.bind();
+            depth_buffer.bind();
             glCullFace(GL_FRONT);
             glClear(GL_DEPTH_BUFFER_BIT);
             glViewport(0, 0, shadow_w, shadow_h);
             depth_shader.use();
             glUniformMatrix4fv(depth_shader.uniform("light_space"), 1, GL_FALSE, glm::value_ptr(light_space));
             mmm2.draw(depth_shader);
-            depth_fbo.unbind();
+            depth_buffer.unbind();
 
-            fbo.bind();
+            gbuffer.bind();
             glCullFace(GL_BACK);
             glClearColor(0.0, 0.0, 0.0, 1.0);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glViewport(0, 0, fbo.w, fbo.h);
+            glViewport(0, 0, gbuffer.w, gbuffer.h);
             mmm_shader.use();
             glUniformMatrix4fv(mmm_shader.uniform("light_space"), 1, GL_FALSE, glm::value_ptr(light_space));
             mmm2.draw(mmm_shader);
-            fbo.unbind();
+            gbuffer.unbind();
 
             glDisable(GL_DEPTH_TEST);
         }
@@ -213,24 +223,24 @@ int main(int argc, char** argv)
 
         for (int i = 0; i < 4; i++)
         {
-            fbo.textures[i]->bind(i);
+            gbuffer.textures[i]->bind(i);
         }
-        depth_fbo.textures[0]->bind(4);
-        fbo_screen.draw(fbo.w / 4, 0, 3 * fbo.w / 4, 3 * fbo.h / 4);
+        depth_buffer.textures[0]->bind(4);
+        fbo_screen.draw(gbuffer.w / 4, 0, 3 * gbuffer.w / 4, 3 * gbuffer.h / 4);
         // fbo_screen.draw(0, 0, fbo.w, fbo.h);
         for (int i = 0; i < 4; i++)
         {
-            fbo.textures[i]->unbind();
+            gbuffer.textures[i]->unbind();
         }
-        depth_fbo.textures[0]->unbind();
+        depth_buffer.textures[0]->unbind();
         light_pass.unuse();
 
         fbo_shader.use();
         for (int i = 0; i < 4; i++)
         {
-            fbo.textures[i]->bind();
-            fbo_screen.draw(0, i * fbo.h / 4, fbo.w / 4, fbo.h / 4);
-            fbo.textures[i]->unbind();
+            gbuffer.textures[i]->bind();
+            fbo_screen.draw(0, i * gbuffer.h / 4, gbuffer.w / 4, gbuffer.h / 4);
+            gbuffer.textures[i]->unbind();
         }
         fbo_shader.unuse();
 

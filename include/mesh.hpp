@@ -7,11 +7,11 @@
 
 struct Material
 {
-    Texture diff_map;
-    Texture spec_map;
-    Texture ambi_map;
-    Texture emis_map;
-    Texture opac_map;
+    Texture2D diff_map;
+    Texture2D spec_map;
+    Texture2D ambi_map;
+    Texture2D emis_map;
+    Texture2D opac_map;
 };
 
 template <uint32_t MAX_INSTANCE>

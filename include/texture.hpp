@@ -4,115 +4,105 @@
 #include <unordered_map>
 #include "gls.hpp"
 
-class Texture
+struct Texture2DCreateInfo
+{
+    GLenum target_type = GL_TEXTURE_2D;
+    GLsizei levels = 10;
+    GLenum internal_format = GL_RGBA16F;
+    GLsizei width = -1;
+    GLsizei height = -1;
+
+    GLint wrap_s = GL_REPEAT;
+    GLint wrap_t = GL_REPEAT;
+    GLint wrap_r = GL_REPEAT;
+    GLint mag_filter = GL_LINEAR;
+    GLint min_filter = GL_LINEAR_MIPMAP_LINEAR;
+
+    float border_color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+};
+
+class Texture2D
 {
   private:
     GLID id = 0;
     GLID slot_in = 0;
-    bool binded = false;
 
     std::string path;
     int w, h;
-    int channel = -1;
+    int channel;
+    bool binded = false;
+    bool src = true;
 
   public:
-    static Texture* default_texture;
-
-    static GLenum tex_format;
-    static GLenum internal_format;
-    static GLenum filter;
-    static GLenum wrap;
-
-    static void rest_attrib()
+    static Texture2D* default_texture;
+    ~Texture2D()
     {
-        Texture::tex_format = GL_RGBA;
-        Texture::internal_format = GL_RGBA16F;
-        Texture::filter = GL_LINEAR_MIPMAP_LINEAR;
-        Texture::wrap = GL_REPEAT;
-    }
-
-    Texture()
-    {
-    }
-
-    ~Texture()
-    {
-        if (w + h > 0 && id != 0)
-        {
+        if (id != 0 && src)
+        { // if the texture is created than free the resources
             glDeleteTextures(1, &id);
         }
     }
 
-    void load(std::string file_path, uint32_t levels = 10)
+    void create(Texture2DCreateInfo create_info)
     {
-        static std::unordered_map<std::string, Texture*> repeat_map;
+        w ? false : w = create_info.width;
+        h ? false : h = create_info.height;
+        path.length() ? false : (path = "Not an Image Texture", 0);
+        glCreateTextures(create_info.target_type, 1, &id);
+
+        glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, create_info.mag_filter);
+        glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, create_info.min_filter);
+        glTextureParameteri(id, GL_TEXTURE_WRAP_S, create_info.wrap_s);
+        glTextureParameteri(id, GL_TEXTURE_WRAP_T, create_info.wrap_r);
+        glTextureParameteri(id, GL_TEXTURE_WRAP_R, create_info.wrap_r);
+        glTextureParameterfv(id, GL_TEXTURE_BORDER_COLOR, create_info.border_color);
+
+        glTextureStorage2D(id, create_info.levels, create_info.internal_format, w, h);
+    }
+
+    void create(Texture2DCreateInfo create_info, std::string file_path)
+    {
+        static std::unordered_map<std::string, Texture2D*> repeat_textures;
         stbi_set_flip_vertically_on_load(true);
 
-        path = file_path;
-        auto repeat_tex = repeat_map.find(file_path);
-        if (repeat_tex == repeat_map.end())
+        auto repeat_tex = repeat_textures.find(file_path);
+        if (repeat_tex == repeat_textures.end())
         {
-            unsigned char* data = stbi_load(file_path.c_str(), &w, &h, &channel, STBI_rgb_alpha);
-            if (data == nullptr)
+            stbi_uc* pixels = stbi_load(file_path.c_str(), //
+                                        &w, &h, &channel,  //
+                                        STBI_rgb_alpha);
+            if (pixels == nullptr)
             {
-                if (default_texture != nullptr)
-                {
-                    link(default_texture);
-                }
+                std::cout << fmt::format("Image {} can not be loaded\n", file_path);
+                link(*default_texture);
                 return;
             }
 
-            glCreateTextures(GL_TEXTURE_2D, 1, &id);
-
-            glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, filter);
-            glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTextureParameteri(id, GL_TEXTURE_WRAP_S, wrap);
-            glTextureParameteri(id, GL_TEXTURE_WRAP_T, wrap);
-            static float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
-            glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-
-            glTextureStorage2D(id, levels, internal_format, w, h);
-            glTextureSubImage2D(id, 0, 0, 0, w, h, tex_format, GL_UNSIGNED_BYTE, data);
-
-            if (levels > 1)
+            path = file_path;
+            create(create_info);
+            glTextureSubImage2D(id, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+            if (create_info.levels > 1)
             {
                 glGenerateTextureMipmap(id);
             }
 
-            stbi_image_free(data);
-            data = nullptr;
-            repeat_map.insert(std::pair<std::string, Texture*>(file_path, this));
+            stbi_image_free(pixels);
+            repeat_textures.insert(std::pair<std::string, Texture2D*>(file_path, this));
         }
         else
         {
-            link(repeat_tex->second);
+            link(*repeat_tex->second);
         }
     }
 
-    void load(int wa, int ha)
+    void link(Texture2D& target)
     {
-        w = wa;
-        h = ha;
-        path = "Not an Image Texture";
-        glCreateTextures(GL_TEXTURE_2D, 1, &id);
-
-        glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, filter);
-        glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, filter);
-        glTextureParameteri(id, GL_TEXTURE_WRAP_S, wrap);
-        glTextureParameteri(id, GL_TEXTURE_WRAP_T, wrap);
-        static float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
-        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-
-        glTextureStorage2D(id, 1, internal_format, w, h);
-        return;
-    }
-
-    void link(Texture* target)
-    {
-        id = target->id;
-        path = target->path;
-        w = -1;
-        h = -1;
+        path = target.path;
+        id = target.id;
+        w = target.w;
+        h = target.h;
+        channel = target.channel;
+        src = false;
     }
 
     void bind(GLID slot = 0)
@@ -146,11 +136,6 @@ class Texture
     }
 };
 
-inline Texture* Texture::default_texture = nullptr;
-
-inline GLenum Texture::tex_format = GL_RGBA;
-inline GLenum Texture::internal_format = GL_RGBA16F;
-inline GLenum Texture::filter = GL_LINEAR_MIPMAP_LINEAR;
-inline GLenum Texture::wrap = GL_REPEAT;
+inline Texture2D* Texture2D::default_texture = nullptr;
 
 #endif // TEXTURE_HPP
