@@ -33,7 +33,7 @@ int main(int argc, char** argv)
         fbo.attachment = GL_COLOR_ATTACHMENT0 + i;
         fbo.attach_texture();
     }
-    fbo.load_attatchmens();
+    fbo.load_draws({GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3});
     fbo.attach_rbo(GL_DEPTH_STENCIL_ATTACHMENT, GL_DEPTH24_STENCIL8);
 
     ScreenRect fbo_screen;
@@ -81,6 +81,20 @@ int main(int argc, char** argv)
     glfwGetCursorPos(glfw.window, &m_x, &m_y);
     double m_x_p = m_x;
     double m_y_p = m_y;
+
+    // shadow works
+    const int shadow_w = 2048;
+    const int shadow_h = 2048;
+    FrameBuff depth_fbo(shadow_w, shadow_h);
+    FrameBuff::attachment = GL_DEPTH_ATTACHMENT;
+    FrameBuff::tex_format = GL_DEPTH_COMPONENT;
+    FrameBuff::internal_format = GL_DEPTH_COMPONENT16;
+    depth_fbo.attach_texture();
+    bool val_dfbo = depth_fbo.validate();
+
+    Shader depth_shader;
+    depth_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/render.vert");
+    depth_shader.link();
 
     Timer frame_timer;
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -148,17 +162,21 @@ int main(int argc, char** argv)
         camera_ubo.load();
 
         {
-            fbo.bind();
-
             glEnable(GL_DEPTH_TEST);
+
+            fbo.bind();
             glClearColor(0.0, 0.0, 0.0, 1.0);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glViewport(0, 0, fbo.w, fbo.h);
-
             mmm.draw(mmm_shader);
-            glDisable(GL_BLEND);
-
             fbo.unbind();
+
+            depth_fbo.bind();
+            glClear(GL_DEPTH_BUFFER_BIT);
+            glViewport(0, 0, shadow_w, shadow_h);
+            mmm.draw(depth_shader);
+            depth_fbo.unbind();
+
             glDisable(GL_DEPTH_TEST);
         }
 
@@ -176,6 +194,7 @@ int main(int argc, char** argv)
         fbo.textures[2]->bind(2);
         fbo.textures[3]->bind(3);
         fbo_screen.draw(fbo.w / 4, 0, 3 * fbo.w / 4, 3 * fbo.h / 4);
+        fbo_screen.draw(0, 0, fbo.w, fbo.h);
         fbo.textures[0]->unbind();
         fbo.textures[1]->unbind();
         fbo.textures[2]->unbind();

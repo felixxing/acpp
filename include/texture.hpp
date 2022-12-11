@@ -23,6 +23,14 @@ class Texture
     static GLenum filter;
     static GLenum wrap;
 
+    static void rest_attrib()
+    {
+        Texture::tex_format = GL_RGBA;
+        Texture::internal_format = GL_RGBA16F;
+        Texture::filter = GL_LINEAR_MIPMAP_LINEAR;
+        Texture::wrap = GL_REPEAT;
+    }
+
     Texture()
     {
     }

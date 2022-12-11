@@ -21,7 +21,15 @@ class FrameBuff
     static GLenum attachment;
 
     std::vector<Texture*> textures;
-    std::vector<GLenum> attachments;
+
+    static void reset_attrib()
+    {
+        FrameBuff::tex_format = GL_RGBA;
+        FrameBuff::internal_format = GL_RGBA16F;
+        FrameBuff::filter = GL_LINEAR;
+        FrameBuff::wrap = GL_REPEAT;
+        FrameBuff::attachment = GL_COLOR_ATTACHMENT0;
+    }
 
     FrameBuff(int wa, int ha)
         : w(wa),
@@ -47,14 +55,16 @@ class FrameBuff
         Texture::filter = filter;
         Texture::wrap = wrap;
 
-        attachments.push_back(attachment);
         textures.back()->load(w, h);
-        glNamedFramebufferTexture(id, attachments.back(), textures.back()->get_id(), 0);
+        glNamedFramebufferTexture(id, attachment, textures.back()->get_id(), 0);
+
+        Texture::rest_attrib();
+        FrameBuff::reset_attrib();
     }
 
-    void load_attatchmens()
+    void load_draws(std::vector<GLenum> buffers)
     {
-        glNamedFramebufferDrawBuffers(id, attachments.size(), attachments.data());
+        glNamedFramebufferDrawBuffers(id, buffers.size(), buffers.data());
     }
 
     void attach_rbo(GLenum attachment, GLenum format)
