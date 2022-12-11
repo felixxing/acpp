@@ -28,13 +28,12 @@ int main(int argc, char** argv)
     Texture::default_texture = &default_tex;
 
     FrameBuff fbo(1920, 1080);
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 4; i++)
     {
         fbo.attachment = GL_COLOR_ATTACHMENT0 + i;
         fbo.attach_texture();
     }
-    fbo.load_draws(
-        {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4});
+    fbo.load_draws({GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3});
     fbo.attach_rbo(GL_DEPTH_STENCIL_ATTACHMENT, GL_DEPTH24_STENCIL8);
 
     ScreenRect fbo_screen;
@@ -105,7 +104,7 @@ int main(int argc, char** argv)
 
     Timer frame_timer;
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glEnable(GL_CULL_FACE);  
+    glEnable(GL_CULL_FACE);
     glfwSetInputMode(glfw.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     while (!glfwWindowShouldClose(glfw.window))
     {
@@ -168,6 +167,12 @@ int main(int argc, char** argv)
 
         camera.update();
         camera_ubo.load();
+        float near_plane = 1.0f, far_plane = 25.0f;
+        glm::mat4 lightProjection = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, near_plane, far_plane);
+        glm::mat4 lightView = glm::lookAt(-lb.dir_lights[0].direction, //
+                                          glm::vec3(0.0f, 0.0f, 0.0f), //
+                                          glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 light_space = lightProjection * lightView;
 
         {
             glEnable(GL_DEPTH_TEST);
@@ -176,13 +181,7 @@ int main(int argc, char** argv)
             glCullFace(GL_FRONT);
             glClear(GL_DEPTH_BUFFER_BIT);
             glViewport(0, 0, shadow_w, shadow_h);
-            float near_plane = 1.0f, far_plane = 25.0f;
-            glm::mat4 lightProjection = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, near_plane, far_plane);
-            glm::mat4 lightView = glm::lookAt(-lb.dir_lights[0].direction, //
-                                              glm::vec3(0.0f, 0.0f, 0.0f), //
-                                              glm::vec3(0.0f, 1.0f, 0.0f));
             depth_shader.use();
-            glm::mat4 light_space = lightProjection * lightView;
             glUniformMatrix4fv(depth_shader.uniform("light_space"), 1, GL_FALSE, glm::value_ptr(light_space));
             mmm2.draw(depth_shader);
             depth_fbo.unbind();
@@ -207,18 +206,19 @@ int main(int argc, char** argv)
         glUniform1i(light_pass.uniform("normals"), 1);
         glUniform1i(light_pass.uniform("colors"), 2);
         glUniform1i(light_pass.uniform("specs"), 3);
-        glUniform1i(light_pass.uniform("proj_coords"), 4);
-        glUniform1i(light_pass.uniform("shadows"), 5);
-        glUniform3fv(light_pass.uniform("camera_pos"), 1, camera.position_gl());
+        glUniform1i(light_pass.uniform("shadows"), 4);
 
-        for (int i = 0; i < 5; i++)
+        glUniform3fv(light_pass.uniform("camera_pos"), 1, camera.position_gl());
+        glUniformMatrix4fv(light_pass.uniform("light_space"), 1, GL_FALSE, glm::value_ptr(light_space));
+
+        for (int i = 0; i < 4; i++)
         {
             fbo.textures[i]->bind(i);
         }
-        depth_fbo.textures[0]->bind(5);
+        depth_fbo.textures[0]->bind(4);
         fbo_screen.draw(fbo.w / 4, 0, 3 * fbo.w / 4, 3 * fbo.h / 4);
         // fbo_screen.draw(0, 0, fbo.w, fbo.h);
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 4; i++)
         {
             fbo.textures[i]->unbind();
         }
@@ -231,12 +231,6 @@ int main(int argc, char** argv)
             fbo.textures[i]->bind();
             fbo_screen.draw(0, i * fbo.h / 4, fbo.w / 4, fbo.h / 4);
             fbo.textures[i]->unbind();
-        }
-        for (int i = 0; i < 1; i++)
-        {
-            fbo.textures[4 + i]->bind();
-            fbo_screen.draw(i + 1 * fbo.w / 4, 3 * fbo.h / 4, fbo.w / 4, fbo.h / 4);
-            fbo.textures[4 + i]->unbind();
         }
         fbo_shader.unuse();
 

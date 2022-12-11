@@ -21,10 +21,10 @@ uniform sampler2D positions;
 uniform sampler2D normals;
 uniform sampler2D colors;
 uniform sampler2D specs;
-uniform sampler2D proj_coords;
-
 uniform sampler2D shadows;
+
 uniform vec3 camera_pos;
+uniform mat4 light_space;
 
 struct PtLight
 {
@@ -46,7 +46,7 @@ struct DirLight
 };
 
 vec3 get_pt_light(vec3 view_dir, vec3 fpos, vec3 fnormal, vec3 fcolor, vec3 fspec, PtLight pt_light);
-vec3 get_dir_light(vec3 view_dir, vec3 fnormal, vec3 fcolor, vec3 fspec, DirLight dir_light);
+vec3 get_dir_light(vec3 view_dir, vec3 fpos, vec3 fnormal, vec3 fcolor, vec3 fspec, DirLight dir_light);
 float get_shadow(vec3 proj_cod, float bias);
 
 void main()
@@ -79,7 +79,7 @@ void main()
         ddir_light.color = vec3(dir_lights[i][3], dir_lights[i][4], dir_lights[i][5]);
         ddir_light.strength = dir_lights[i][6];
 
-        light_result += get_dir_light(view_dir, normal, frag_color, frag_spec, ddir_light);
+        light_result += get_dir_light(view_dir, frag_pos, normal, frag_color, frag_spec, ddir_light);
     }
 
     result = vec4(light_result, 1.0);
@@ -102,7 +102,7 @@ vec3 get_pt_light(vec3 view_dir, vec3 fpos, vec3 fnormal, vec3 fcolor, vec3 fspe
     return pt_light.color * pt_light.strength * attenuation * (diffuse + ambient + specular);
 }
 
-vec3 get_dir_light(vec3 view_dir, vec3 fnormal, vec3 fcolor, vec3 fspec, DirLight dir_light)
+vec3 get_dir_light(vec3 view_dir, vec3 fpos, vec3 fnormal, vec3 fcolor, vec3 fspec, DirLight dir_light)
 {
     vec3 light_dir = -normalize(dir_light.direction);
 
@@ -113,9 +113,11 @@ vec3 get_dir_light(vec3 view_dir, vec3 fnormal, vec3 fcolor, vec3 fspec, DirLigh
     vec3 diffuse = max(dot(fnormal, light_dir), 0.0) * fcolor;
     vec3 specular = spec * fspec;
 
-    vec3 proj_coord = texture(proj_coords, light_fs_in.uv).rgb;
+    vec4 light_coord = light_space * vec4(fpos, 1.0);
+    vec3 proj_coord = light_coord.xyz / light_coord.w;
     float bias = max(0.001 * (1.0 - dot(fnormal, light_dir)), 0.0004);
     float shadow = get_shadow(proj_coord, bias);
+
     return 0.5 * dir_light.color * dir_light.strength * ((1 - shadow) * (diffuse + specular) + ambient);
 }
 
