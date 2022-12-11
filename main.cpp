@@ -24,8 +24,8 @@ int main(int argc, char** argv)
     glfw.load("deffer shading");
 
     Texture2D default_tex2d;
-    Texture2DCreateInfo create_info;
-    default_tex2d.create(create_info, "res/textures/white.png");
+    Texture2DCreateInfo default_create_info;
+    default_tex2d.create(default_create_info, "res/textures/white.png");
     Texture2D::default_texture = &default_tex2d;
 
     Framebuffer gbuffer(1920, 1080);
@@ -38,7 +38,16 @@ int main(int argc, char** argv)
         create_info.height = gbuffer.h;
         gbuffer.attach_texture(create_info, GL_COLOR_ATTACHMENT0 + i);
     }
-    gbuffer.attach_rbo(GL_DEPTH_ATTACHMENT, GL_DEPTH24_STENCIL8);
+    Texture2DCreateInfo gbuffer_depth_create_info;
+    gbuffer_depth_create_info.internal_format = GL_DEPTH_COMPONENT32F;
+    gbuffer_depth_create_info.wrap_s = GL_CLAMP_TO_BORDER;
+    gbuffer_depth_create_info.wrap_r = GL_CLAMP_TO_BORDER;
+    gbuffer_depth_create_info.wrap_t = GL_CLAMP_TO_BORDER;
+    gbuffer_depth_create_info.min_filter = GL_LINEAR;
+    gbuffer_depth_create_info.width = gbuffer.w;
+    gbuffer_depth_create_info.height = gbuffer.h;
+    gbuffer_depth_create_info.levels = 1;
+    gbuffer.attach_texture(gbuffer_depth_create_info, GL_DEPTH_ATTACHMENT);
     gbuffer.draw_buffers({GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3});
     bool gbuffer_validation = gbuffer.validate();
 
@@ -62,7 +71,7 @@ int main(int argc, char** argv)
     Model<20> mmm2("res/model/cube/cube.obj");
     mmm2.ins_count = 3;
     mmm2.ins_matrix[0] = glm::mat4(1.0f);
-    mmm2.ins_matrix[0] = glm::translate(mmm2.ins_matrix[0], {-9, 0.5, 0.0});
+    mmm2.ins_matrix[0] = glm::translate(mmm2.ins_matrix[0], {1, 0.5, 0.0});
     mmm2.ins_matrix[1] = glm::mat4(1.0f);
     mmm2.ins_matrix[1] = glm::translate(mmm2.ins_matrix[1], {8, 2.0, 8.0});
     mmm2.ins_matrix[2] = glm::mat4(1.0f);
