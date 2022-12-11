@@ -89,8 +89,8 @@ int main(int argc, char** argv)
     double m_y_p = m_y;
 
     // shadow works
-    const int shadow_w = 2048;
-    const int shadow_h = 2048;
+    const int shadow_w = 8102;
+    const int shadow_h = 8102;
     FrameBuff depth_fbo(shadow_w, shadow_h);
     FrameBuff::attachment = GL_DEPTH_ATTACHMENT;
     FrameBuff::tex_format = GL_DEPTH_COMPONENT;
