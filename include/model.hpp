@@ -71,7 +71,7 @@ class Model
             {
                 materials[i]->opac_map.load(prev_path + rel_path.C_Str(), 1);
             }
-            Texture::filter = GL_LINEAR_MIPMAP_LINEAR;
+            Texture::rest_attrib();
         }
     }
 
