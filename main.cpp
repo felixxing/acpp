@@ -57,7 +57,7 @@ int main(int argc, char** argv)
     Model<20> mmm2("res/model/cube/cube.obj");
     mmm2.ins_count = 3;
     mmm2.ins_matrix[0] = glm::mat4(1.0f);
-    mmm2.ins_matrix[0] = glm::translate(mmm2.ins_matrix[0], {3, 0.5, 0.0});
+    mmm2.ins_matrix[0] = glm::translate(mmm2.ins_matrix[0], {-9, 0.5, 0.0});
     mmm2.ins_matrix[1] = glm::mat4(1.0f);
     mmm2.ins_matrix[1] = glm::translate(mmm2.ins_matrix[1], {8, 2.0, 8.0});
     mmm2.ins_matrix[2] = glm::mat4(1.0f);
