@@ -19,7 +19,7 @@ uniform float far_plane;
 uniform vec3 light_pos = vec3(2, 2, 2);
 uniform vec3 light_color = vec3(1, 1, 1);
 
-uniform float strength = 50;
+uniform float strength = 100;
 uniform float constant = 1;
 uniform float linear = 0.09;
 uniform float quadratic = 0.032;

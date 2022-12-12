@@ -105,21 +105,9 @@ int glmain()
     };
     init_shaders();
 
-    Model<20> sponza_model("res/model/cube/cube.obj");
-    sponza_model.ins_count = 8;
-    sponza_model.ins_matrix[0] = glm::scale(glm::mat4(1.0f), {20.0f, 0.1f, 20.0f});
-    sponza_model.ins_matrix[1] = glm::translate(glm::mat4(1.0f), {5, 5, 5});
-    sponza_model.ins_matrix[2] = glm::translate(glm::mat4(1.0f), {0.0f, 0.5f, 0.0f});
-
-    sponza_model.ins_matrix[3] = glm::scale(glm::translate(glm::mat4(1.0f), {0.0f, 10.0f, 0.0f}), {20.0f, 0.1f, 20.0f});
-
-    sponza_model.ins_matrix[4] = glm::scale(glm::translate(glm::mat4(1.0f), {10.0f, 0.0f, 0.0f}), {0.1f, 20.0f, 20.0f});
-    sponza_model.ins_matrix[5] =
-        glm::scale(glm::translate(glm::mat4(1.0f), {-10.0f, 0.0f, 0.0f}), {0.1f, 20.0f, 20.0f});
-
-    sponza_model.ins_matrix[6] = glm::scale(glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, 10.0f}), {20.0f, 20.0f, 0.1f});
-    sponza_model.ins_matrix[7] =
-        glm::scale(glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, -10.0f}), {20.0f, 20.0f, 0.1f});
+    Model<20> sponza_model("res/model/sponza/sponza.obj");
+    sponza_model.ins_count = 1;
+    sponza_model.ins_matrix[0] = glm::scale(glm::mat4(1.0f), {0.1f, 0.1f, 0.1f});
 
     Camera camera;
     camera.x = 0;
@@ -198,7 +186,7 @@ int glmain()
     float far = 1000.0f;
     glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), aspect, near, far);
 
-    glm::vec3 lightPos = {2, 2, 2};
+    glm::vec3 lightPos = {0, 70, 0};
     std::vector<glm::mat4> shadowTransforms;
     shadowTransforms.push_back(shadowProj *
                                glm::lookAt(lightPos, lightPos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
