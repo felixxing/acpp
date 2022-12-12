@@ -68,7 +68,7 @@ int glmain()
         create_info.width = light_pass_buffer.w;
         create_info.height = light_pass_buffer.h;
         light_pass_buffer.attach_texture(create_info, GL_COLOR_ATTACHMENT0);
-        light_pass_buffer.attach_rbo(GL_DEPTH_ATTACHMENT, GL_DEPTH24_STENCIL8);
+        // light_pass_buffer.attach_rbo(GL_DEPTH_ATTACHMENT, GL_DEPTH24_STENCIL8);
 
         light_pass_buffer_validation = light_pass_buffer.validate();
     };
@@ -78,7 +78,7 @@ int glmain()
 
     Shader screen_shader;
     Shader gbuffer_shader;
-    // Shader dir_light_pass_shader;
+    Shader dir_light_pass_shader;
     Shader pt_light_pass_shader;
     auto init_shaders = [&]()
     {
@@ -90,9 +90,9 @@ int glmain()
         gbuffer_shader.atatch_module(GL_FRAGMENT_SHADER, "res/shader/new/gbuffer.frag");
         gbuffer_shader.link();
 
-        // dir_light_pass_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/new/dir_light_pass.vert");
-        // dir_light_pass_shader.atatch_module(GL_FRAGMENT_SHADER, "res/shader/new/dir_light_pass.frag");
-        // dir_light_pass_shader.link();
+        dir_light_pass_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/new/light.vert");
+        dir_light_pass_shader.atatch_module(GL_FRAGMENT_SHADER, "res/shader/new/dir_light_pass.frag");
+        dir_light_pass_shader.link();
 
         pt_light_pass_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/new/light.vert");
         pt_light_pass_shader.atatch_module(GL_FRAGMENT_SHADER, "res/shader/new/pt_light_pass.frag");
@@ -205,7 +205,6 @@ int glmain()
         };
         draw_gbuffer();
 
-
         auto ligthing_pass = [&]()
         {
             light_pass_buffer.bind();
@@ -213,32 +212,60 @@ int glmain()
             glBlendFunc(GL_ONE, GL_ONE);
             glClear(GL_COLOR_BUFFER_BIT);
 
-            pt_light_pass_shader.use();
-
-            // set texture uniforms
-            glUniform1i(pt_light_pass_shader.uniform("positions"), 0);
-            glUniform1i(pt_light_pass_shader.uniform("normals"), 1);
-            glUniform1i(pt_light_pass_shader.uniform("colors"), 2);
-            glUniform1i(pt_light_pass_shader.uniform("specs"), 3);
-            glUniform3fv(pt_light_pass_shader.uniform("camera_pos"), 1, camera.position_gl());
-
-            // bind gbuffer
-            gbuffer.textures[0]->bind(0);
-            gbuffer.textures[1]->bind(1);
-            gbuffer.textures[2]->bind(2);
-            gbuffer.textures[3]->bind(3);
-
-            for (int i = 0; i < 100; i++)
             {
-                screen.draw(0, 0, glfw.width, glfw.height);
+                pt_light_pass_shader.use();
+
+                // set texture uniforms
+                glUniform1i(pt_light_pass_shader.uniform("positions"), 0);
+                glUniform1i(pt_light_pass_shader.uniform("normals"), 1);
+                glUniform1i(pt_light_pass_shader.uniform("colors"), 2);
+                glUniform1i(pt_light_pass_shader.uniform("specs"), 3);
+                glUniform3fv(pt_light_pass_shader.uniform("camera_pos"), 1, camera.position_gl());
+
+                // bind gbuffer
+                gbuffer.textures[0]->bind(0);
+                gbuffer.textures[1]->bind(1);
+                gbuffer.textures[2]->bind(2);
+                gbuffer.textures[3]->bind(3);
+
+                for (int i = 0; i < 1; i++)
+                {
+                    screen.draw(0, 0, glfw.width, glfw.height);
+                }
+
+                gbuffer.textures[0]->unbind();
+                gbuffer.textures[1]->unbind();
+                gbuffer.textures[2]->unbind();
+                gbuffer.textures[3]->unbind();
+
+                pt_light_pass_shader.unuse();
             }
+            {
+                dir_light_pass_shader.use();
 
-            gbuffer.textures[0]->unbind();
-            gbuffer.textures[1]->unbind();
-            gbuffer.textures[2]->unbind();
-            gbuffer.textures[3]->unbind();
+                glUniform1i(dir_light_pass_shader.uniform("positions"), 0);
+                glUniform1i(dir_light_pass_shader.uniform("normals"), 1);
+                glUniform1i(dir_light_pass_shader.uniform("colors"), 2);
+                glUniform1i(dir_light_pass_shader.uniform("specs"), 3);
+                glUniform3fv(dir_light_pass_shader.uniform("camera_pos"), 1, camera.position_gl());
 
-            pt_light_pass_shader.unuse();
+                gbuffer.textures[0]->bind(0);
+                gbuffer.textures[1]->bind(1);
+                gbuffer.textures[2]->bind(2);
+                gbuffer.textures[3]->bind(3);
+
+                for (int i = 0; i < 1; i++)
+                {
+                    screen.draw(0, 0, glfw.width, glfw.height);
+                }
+
+                gbuffer.textures[0]->unbind();
+                gbuffer.textures[1]->unbind();
+                gbuffer.textures[2]->unbind();
+                gbuffer.textures[3]->unbind();
+
+                dir_light_pass_shader.unuse();
+            }
 
             glDisable(GL_BLEND);
             light_pass_buffer.unbind();
