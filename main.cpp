@@ -205,8 +205,14 @@ int glmain()
         };
         draw_gbuffer();
 
+
         auto ligthing_pass = [&]()
         {
+            light_pass_buffer.bind();
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_ONE, GL_ONE);
+            glClear(GL_COLOR_BUFFER_BIT);
+
             pt_light_pass_shader.use();
 
             // set texture uniforms
@@ -222,7 +228,10 @@ int glmain()
             gbuffer.textures[2]->bind(2);
             gbuffer.textures[3]->bind(3);
 
-            screen.draw(0, 0, glfw.width, glfw.height);
+            for (int i = 0; i < 100; i++)
+            {
+                screen.draw(0, 0, glfw.width, glfw.height);
+            }
 
             gbuffer.textures[0]->unbind();
             gbuffer.textures[1]->unbind();
@@ -230,8 +239,18 @@ int glmain()
             gbuffer.textures[3]->unbind();
 
             pt_light_pass_shader.unuse();
+
+            glDisable(GL_BLEND);
+            light_pass_buffer.unbind();
         };
         ligthing_pass();
+
+        glClear(GL_COLOR_BUFFER_BIT);
+        screen_shader.use();
+        light_pass_buffer.textures[0]->bind();
+        screen.draw(0, 0, glfw.width, glfw.height);
+        light_pass_buffer.textures[0]->unbind();
+        screen_shader.unuse();
 
         glfwSwapBuffers(glfw.window);
         frame_timer.finish();
