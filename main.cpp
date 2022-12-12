@@ -32,28 +32,32 @@ int glmain()
     bool gbuffer_validation = false;
     auto create_gbuffer = [&]()
     {
-        for (int i = 0; i < 4; i++)
-        {
-            Texture2DCreateInfo create_info;
-            create_info.internal_format = GL_RGBA16F;
-            create_info.levels = 1;
-            create_info.min_filter = GL_LINEAR;
-            create_info.width = gbuffer.w;
-            create_info.height = gbuffer.h;
-            gbuffer.attach_texture(create_info, GL_COLOR_ATTACHMENT0 + i);
-        }
+        // position and normals
+        Texture2DCreateInfo create_info;
+        create_info.internal_format = GL_RGBA16F;
+        create_info.levels = 1;
+        create_info.min_filter = GL_LINEAR;
+        create_info.width = gbuffer.w;
+        create_info.height = gbuffer.h;
+        gbuffer.attach_texture(create_info, GL_COLOR_ATTACHMENT0);
+        gbuffer.attach_texture(create_info, GL_COLOR_ATTACHMENT1);
+        // color
+        create_info.internal_format = GL_RGBA8;
+        gbuffer.attach_texture(create_info, GL_COLOR_ATTACHMENT2);
+        // spec
+        create_info.internal_format = GL_RGBA8;
+        gbuffer.attach_texture(create_info, GL_COLOR_ATTACHMENT3);
 
-        // attach depth map
-        Texture2DCreateInfo gbuffer_depth_create_info;
-        gbuffer_depth_create_info.internal_format = GL_DEPTH_COMPONENT32F;
-        gbuffer_depth_create_info.wrap_s = GL_CLAMP_TO_BORDER;
-        gbuffer_depth_create_info.wrap_r = GL_CLAMP_TO_BORDER;
-        gbuffer_depth_create_info.wrap_t = GL_CLAMP_TO_BORDER;
-        gbuffer_depth_create_info.min_filter = GL_LINEAR;
-        gbuffer_depth_create_info.width = gbuffer.w;
-        gbuffer_depth_create_info.height = gbuffer.h;
-        gbuffer_depth_create_info.levels = 1;
-        gbuffer.attach_texture(gbuffer_depth_create_info, GL_DEPTH_ATTACHMENT);
+        // depth
+        create_info.internal_format = GL_DEPTH_COMPONENT24;
+        create_info.wrap_s = GL_CLAMP_TO_BORDER;
+        create_info.wrap_r = GL_CLAMP_TO_BORDER;
+        create_info.wrap_t = GL_CLAMP_TO_BORDER;
+        create_info.min_filter = GL_LINEAR;
+        create_info.width = gbuffer.w;
+        create_info.height = gbuffer.h;
+        create_info.levels = 1;
+        gbuffer.attach_texture(create_info, GL_DEPTH_ATTACHMENT);
         gbuffer.draw_buffers({GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3});
         gbuffer_validation = gbuffer.validate();
     };
@@ -133,7 +137,7 @@ int glmain()
     const int shadow_h = 4096;
     Framebuffer dir_light_depth_map(shadow_w, shadow_h);
     Texture2DCreateInfo depth_create_info;
-    depth_create_info.internal_format = GL_DEPTH_COMPONENT32F;
+    depth_create_info.internal_format = GL_DEPTH_COMPONENT24;
     depth_create_info.wrap_s = GL_CLAMP_TO_BORDER;
     depth_create_info.wrap_r = GL_CLAMP_TO_BORDER;
     depth_create_info.wrap_t = GL_CLAMP_TO_BORDER;
@@ -151,9 +155,52 @@ int glmain()
                                       glm::vec3(0.0f, 1.0f, 0.0f));
     glm::mat4 light_space = lightProjection * lightView;
 
-    Shader shadow_shader;
-    shadow_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/new/shadow.vert");
-    shadow_shader.link();
+    Shader dir_shadow_shader;
+    dir_shadow_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/new/dir_shadow.vert");
+    dir_shadow_shader.link();
+
+    // pt shadow
+    const int pt_shadow_w = 1024;
+    const int pt_shadow_h = 1024;
+    Framebuffer pt_light_depth_map(pt_shadow_w, pt_shadow_h);
+    depth_create_info.internal_format = GL_DEPTH_COMPONENT24;
+    depth_create_info.wrap_s = GL_CLAMP_TO_BORDER;
+    depth_create_info.wrap_r = GL_CLAMP_TO_BORDER;
+    depth_create_info.wrap_t = GL_CLAMP_TO_BORDER;
+    depth_create_info.min_filter = GL_LINEAR;
+    depth_create_info.width = pt_shadow_w;
+    depth_create_info.height = pt_shadow_h;
+    depth_create_info.levels = 1;
+    depth_create_info.target_type = GL_TEXTURE_CUBE_MAP;
+    pt_light_depth_map.attach_texture(depth_create_info, GL_DEPTH_ATTACHMENT);
+    bool pt_light_depth_map_validation = pt_light_depth_map.validate();
+
+    Shader pt_shadow_shader;
+    pt_shadow_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/new/pt_shadow.vert");
+    pt_shadow_shader.atatch_module(GL_GEOMETRY_SHADER, "res/shader/new/pt_shadow.geom");
+    pt_shadow_shader.atatch_module(GL_FRAGMENT_SHADER, "res/shader/new/pt_shadow.frag");
+    pt_shadow_shader.link();
+    
+    float aspect = (float)pt_shadow_w / (float)pt_shadow_h;
+    float near = 1.0f;
+    float far = 1000.0f;
+    glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), aspect, near, far);
+
+    glm::vec3 lightPos = {2, 2, 2};
+    std::vector<glm::mat4> shadowTransforms;
+    shadowTransforms.push_back(shadowProj *
+                               glm::lookAt(lightPos, lightPos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+    shadowTransforms.push_back(shadowProj *
+                               glm::lookAt(lightPos, lightPos + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+    shadowTransforms.push_back(shadowProj *
+                               glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)));
+    shadowTransforms.push_back(shadowProj *
+                               glm::lookAt(lightPos, lightPos + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)));
+    shadowTransforms.push_back(shadowProj *
+                               glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0)));
+    shadowTransforms.push_back(shadowProj *
+                               glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0)));
+    // pt shadow
 
     while (!glfwWindowShouldClose(glfw.window))
     {
@@ -223,10 +270,22 @@ int glmain()
             glCullFace(GL_FRONT);
             glClear(GL_DEPTH_BUFFER_BIT);
             glViewport(0, 0, dir_light_depth_map.w, dir_light_depth_map.h);
-            shadow_shader.use();
-            glUniformMatrix4fv(shadow_shader.uniform("light_space"), 1, GL_FALSE, glm::value_ptr(light_space));
-            sponza_model.draw(shadow_shader);
+            dir_shadow_shader.use();
+            glUniformMatrix4fv(dir_shadow_shader.uniform("light_space"), 1, GL_FALSE, glm::value_ptr(light_space));
+            sponza_model.draw(dir_shadow_shader);
             dir_light_depth_map.unbind();
+
+            pt_light_depth_map.bind();
+            glCullFace(GL_FRONT);
+            glClear(GL_DEPTH_BUFFER_BIT);
+            glViewport(0, 0, pt_light_depth_map.w, pt_light_depth_map.h);
+            pt_shadow_shader.use();
+            glUniformMatrix4fv(pt_shadow_shader.uniform("shadowMatrices"), 6, GL_FALSE,
+                               glm::value_ptr(shadowTransforms[0]));
+            glUniform3fv(pt_shadow_shader.uniform("lightPos"), 1, glm::value_ptr(glm::vec3(2, 2, 2)));
+            glUniform1f(pt_shadow_shader.uniform("far_plane"), 1000.0f);
+            sponza_model.draw(pt_shadow_shader);
+            pt_light_depth_map.unbind();
 
             gbuffer.bind();
             glCullFace(GL_BACK);
@@ -276,7 +335,6 @@ int glmain()
             }
             {
                 dir_light_pass_shader.use();
-
                 glUniform1i(dir_light_pass_shader.uniform("positions"), 0);
                 glUniform1i(dir_light_pass_shader.uniform("normals"), 1);
                 glUniform1i(dir_light_pass_shader.uniform("colors"), 2);
@@ -303,7 +361,6 @@ int glmain()
                 gbuffer.textures[2]->unbind();
                 gbuffer.textures[3]->unbind();
                 dir_light_depth_map.textures[0]->unbind();
-
                 dir_light_pass_shader.unuse();
             }
 
@@ -353,16 +410,16 @@ int main(int argc, char** argv)
          create_info.height = gbuffer.h;
          gbuffer.attach_texture(create_info, GL_COLOR_ATTACHMENT0 + i);
      }
-     Texture2DCreateInfo gbuffer_depth_create_info;
-     gbuffer_depth_create_info.internal_format = GL_DEPTH_COMPONENT32F;
-     gbuffer_depth_create_info.wrap_s = GL_CLAMP_TO_BORDER;
-     gbuffer_depth_create_info.wrap_r = GL_CLAMP_TO_BORDER;
-     gbuffer_depth_create_info.wrap_t = GL_CLAMP_TO_BORDER;
-     gbuffer_depth_create_info.min_filter = GL_LINEAR;
-     gbuffer_depth_create_info.width = gbuffer.w;
-     gbuffer_depth_create_info.height = gbuffer.h;
-     gbuffer_depth_create_info.levels = 1;
-     gbuffer.attach_texture(gbuffer_depth_create_info, GL_DEPTH_ATTACHMENT);
+     Texture2DCreateInfo create_info;
+     create_info.internal_format = GL_DEPTH_COMPONENT32F;
+     create_info.wrap_s = GL_CLAMP_TO_BORDER;
+     create_info.wrap_r = GL_CLAMP_TO_BORDER;
+     create_info.wrap_t = GL_CLAMP_TO_BORDER;
+     create_info.min_filter = GL_LINEAR;
+     create_info.width = gbuffer.w;
+     create_info.height = gbuffer.h;
+     create_info.levels = 1;
+     gbuffer.attach_texture(create_info, GL_DEPTH_ATTACHMENT);
      gbuffer.draw_buffers({GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3});
      bool gbuffer_validation = gbuffer.validate();
 
