@@ -13,6 +13,11 @@
 #include "camera.hpp"
 #include "lights.hpp"
 
+int glmain()
+{
+    return EXIT_SUCCESS;
+}
+
 int main(int argc, char** argv)
 {
     GLWindow glfw(1920, 1080);
