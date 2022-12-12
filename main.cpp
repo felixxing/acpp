@@ -231,45 +231,41 @@ int glmain()
             glBlendFunc(GL_ONE, GL_ONE);
             glClear(GL_COLOR_BUFFER_BIT);
 
-            {
-                pt_light1.color_pass(
-                    [&]()
-                    {
-                        glUniform3fv(PtLight::color_pass_shader->uniform("camera_pos"), 1, camera.position_gl());
+            pt_light1.color_pass(
+                [&]()
+                {
+                    glUniform3fv(PtLight::color_pass_shader->uniform("camera_pos"), 1, camera.position_gl());
 
-                        gbuffer.textures[0]->bind(POSITION);
-                        gbuffer.textures[1]->bind(NORMAL);
-                        gbuffer.textures[2]->bind(COLOR);
-                        gbuffer.textures[3]->bind(SPECULAR);
+                    gbuffer.textures[0]->bind(POSITION);
+                    gbuffer.textures[1]->bind(NORMAL);
+                    gbuffer.textures[2]->bind(COLOR);
+                    gbuffer.textures[3]->bind(SPECULAR);
 
-                        screen.draw(0, 0, glfw.width, glfw.height);
+                    screen.draw(0, 0, glfw.width, glfw.height);
 
-                        gbuffer.textures[0]->unbind();
-                        gbuffer.textures[1]->unbind();
-                        gbuffer.textures[2]->unbind();
-                        gbuffer.textures[3]->unbind();
-                    });
-            }
-            {
+                    gbuffer.textures[0]->unbind();
+                    gbuffer.textures[1]->unbind();
+                    gbuffer.textures[2]->unbind();
+                    gbuffer.textures[3]->unbind();
+                });
 
-                dir_light1.color_pass(
-                    [&]()
-                    {
-                        glUniform3fv(DirLight::color_pass_shader->uniform("camera_pos"), 1, camera.position_gl());
+            dir_light1.color_pass(
+                [&]()
+                {
+                    glUniform3fv(DirLight::color_pass_shader->uniform("camera_pos"), 1, camera.position_gl());
 
-                        gbuffer.textures[0]->bind(POSITION);
-                        gbuffer.textures[1]->bind(NORMAL);
-                        gbuffer.textures[2]->bind(COLOR);
-                        gbuffer.textures[3]->bind(SPECULAR);
+                    gbuffer.textures[0]->bind(POSITION);
+                    gbuffer.textures[1]->bind(NORMAL);
+                    gbuffer.textures[2]->bind(COLOR);
+                    gbuffer.textures[3]->bind(SPECULAR);
 
-                        screen.draw(0, 0, glfw.width, glfw.height);
+                    screen.draw(0, 0, glfw.width, glfw.height);
 
-                        gbuffer.textures[0]->unbind();
-                        gbuffer.textures[1]->unbind();
-                        gbuffer.textures[2]->unbind();
-                        gbuffer.textures[3]->unbind();
-                    });
-            }
+                    gbuffer.textures[0]->unbind();
+                    gbuffer.textures[1]->unbind();
+                    gbuffer.textures[2]->unbind();
+                    gbuffer.textures[3]->unbind();
+                });
 
             glDisable(GL_BLEND);
             light_pass_buffer.unbind();
