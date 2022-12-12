@@ -4,6 +4,16 @@
 #include "gls.hpp"
 #include "texture.hpp"
 
+
+enum GBufferSlot
+{
+    POSITION = 0,
+    NORMAL = 1,
+    COLOR = 2,
+    SPECULAR = 3,
+    SHADOW = 4
+};
+
 class ScreenRect
 {
   private:

@@ -8,6 +8,8 @@ in LIGHT_VS_OUT
 }
 pt_light_fs_in;
 
+uniform int done_shadow;
+
 uniform sampler2D positions;
 uniform sampler2D normals;
 uniform sampler2D colors;
@@ -17,9 +19,9 @@ uniform sampler2D shadow;
 uniform vec3 camera_pos;
 uniform mat4 light_space;
 
-uniform vec3 light_dir = vec3(-1, -1, 0);
-uniform vec3 light_color = vec3(1, 1, 1);
-uniform float strength = 5;
+uniform vec3 light_dir;
+uniform vec3 light_color;
+uniform float strength;
 
 void main()
 {
@@ -49,5 +51,12 @@ void main()
     float current_depth = proj_coord.z;
     float shadow_amout = current_depth < closet_depth ? 1.0 : 0.0;
 
-    result = vec4(light_color * strength * (shadow_amout * (diffuse + specular) + ambient), 1.0);
+    if (done_shadow == 1)
+    {
+        result = vec4(light_color * strength * (shadow_amout * (diffuse + specular) + ambient), 1.0);
+    }
+    else
+    {
+        result = vec4(light_color * strength * (1 * (diffuse + specular) + ambient), 1.0);
+    }
 }

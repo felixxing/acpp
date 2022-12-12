@@ -11,7 +11,8 @@
 #include "model.hpp"
 #include "buffers.hpp"
 #include "camera.hpp"
-#include "lights.hpp"
+#include "pt_light.hpp"
+#include "dir_light.hpp"
 
 int glmain()
 {
@@ -83,31 +84,24 @@ int glmain()
 
     Shader screen_shader;
     Shader gbuffer_shader;
-    Shader dir_light_pass_shader;
-    Shader pt_light_pass_shader;
     auto init_shaders = [&]()
     {
-        screen_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/new/screen.vert");
-        screen_shader.atatch_module(GL_FRAGMENT_SHADER, "res/shader/new/screen.frag");
+        screen_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/screen.vert");
+        screen_shader.atatch_module(GL_FRAGMENT_SHADER, "res/shader/screen.frag");
         screen_shader.link();
 
-        gbuffer_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/new/gbuffer.vert");
-        gbuffer_shader.atatch_module(GL_FRAGMENT_SHADER, "res/shader/new/gbuffer.frag");
+        gbuffer_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/gbuffer.vert");
+        gbuffer_shader.atatch_module(GL_FRAGMENT_SHADER, "res/shader/gbuffer.frag");
         gbuffer_shader.link();
-
-        dir_light_pass_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/new/light.vert");
-        dir_light_pass_shader.atatch_module(GL_FRAGMENT_SHADER, "res/shader/new/dir_light_pass.frag");
-        dir_light_pass_shader.link();
-
-        pt_light_pass_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/new/light.vert");
-        pt_light_pass_shader.atatch_module(GL_FRAGMENT_SHADER, "res/shader/new/pt_light_pass.frag");
-        pt_light_pass_shader.link();
     };
     init_shaders();
 
     Model<20> sponza_model("res/model/sponza/sponza.obj");
     sponza_model.ins_count = 1;
     sponza_model.ins_matrix[0] = glm::scale(glm::mat4(1.0f), {0.1f, 0.1f, 0.1f});
+
+    Model<5> cube("res/model/cube/cube.obj");
+    cube.ins_count = 1;
 
     Camera camera;
     camera.x = 0;
@@ -130,78 +124,14 @@ int glmain()
     Timer frame_timer;
     glfwSetInputMode(glfw.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+    PtLight::init();
+    PtLight pt_light1(1024, 1024);
+
+    DirLight::init();
+    DirLight dir_light1(2048, 2048);
+
     glEnable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    const int shadow_w = 2048;
-    const int shadow_h = 2048;
-    Framebuffer dir_light_depth_map(shadow_w, shadow_h);
-    Texture2DCreateInfo depth_create_info;
-    depth_create_info.internal_format = GL_DEPTH_COMPONENT32;
-    depth_create_info.wrap_s = GL_CLAMP_TO_BORDER;
-    depth_create_info.wrap_r = GL_CLAMP_TO_BORDER;
-    depth_create_info.wrap_t = GL_CLAMP_TO_BORDER;
-    depth_create_info.min_filter = GL_LINEAR;
-    depth_create_info.width = shadow_w;
-    depth_create_info.height = shadow_h;
-    depth_create_info.levels = 1;
-    dir_light_depth_map.attach_texture(depth_create_info, GL_DEPTH_ATTACHMENT);
-    bool depth_buffer_validation = dir_light_depth_map.validate();
-
-    float near_plane = 1.0f, far_plane = 400.0f;
-    glm::mat4 lightProjection = glm::ortho(-200.0f, 200.0f, -200.0f, 200.0f, near_plane, far_plane);
-    glm::mat4 lightView = glm::lookAt(glm::vec3(200, 200, 0),      //
-                                      glm::vec3(0.0f, 0.0f, 0.0f), //
-                                      glm::vec3(0.0f, 1.0f, 0.0f));
-    glm::mat4 light_space = lightProjection * lightView;
-
-    Shader dir_shadow_shader;
-    dir_shadow_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/new/dir_shadow.vert");
-    dir_shadow_shader.link();
-
-    // pt shadow
-    const int pt_shadow_w = 512;
-    const int pt_shadow_h = 512;
-    Framebuffer pt_light_depth_map(pt_shadow_w, pt_shadow_h);
-    depth_create_info.internal_format = GL_DEPTH_COMPONENT16;
-    depth_create_info.wrap_s = GL_CLAMP_TO_BORDER;
-    depth_create_info.wrap_r = GL_CLAMP_TO_BORDER;
-    depth_create_info.wrap_t = GL_CLAMP_TO_BORDER;
-    depth_create_info.min_filter = GL_LINEAR;
-    depth_create_info.width = pt_shadow_w;
-    depth_create_info.height = pt_shadow_h;
-    depth_create_info.levels = 1;
-    depth_create_info.target_type = GL_TEXTURE_CUBE_MAP;
-    pt_light_depth_map.attach_texture(depth_create_info, GL_DEPTH_ATTACHMENT);
-    bool pt_light_depth_map_validation = pt_light_depth_map.validate();
-
-    Shader pt_shadow_shader;
-    pt_shadow_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/new/pt_shadow.vert");
-    pt_shadow_shader.atatch_module(GL_GEOMETRY_SHADER, "res/shader/new/pt_shadow.geom");
-    pt_shadow_shader.atatch_module(GL_FRAGMENT_SHADER, "res/shader/new/pt_shadow.frag");
-    pt_shadow_shader.link();
-
-    float aspect = (float)pt_shadow_w / (float)pt_shadow_h;
-    float near = 0.1f;
-    float far = 500.0f;
-    glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), aspect, near, far);
-
-    glm::vec3 lightPos = {0, 70, 0};
-    std::vector<glm::mat4> shadowTransforms;
-    shadowTransforms.push_back(shadowProj *
-                               glm::lookAt(lightPos, lightPos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
-    shadowTransforms.push_back(shadowProj *
-                               glm::lookAt(lightPos, lightPos + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
-    shadowTransforms.push_back(shadowProj *
-                               glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)));
-    shadowTransforms.push_back(shadowProj *
-                               glm::lookAt(lightPos, lightPos + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)));
-    shadowTransforms.push_back(shadowProj *
-                               glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0)));
-    shadowTransforms.push_back(shadowProj *
-                               glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0)));
-    // pt shadow
-
     while (!glfwWindowShouldClose(glfw.window))
     {
         frame_timer.start();
@@ -262,37 +192,33 @@ int glmain()
 
         camera.update();
         camera_ubo.load();
+        cube.ins_matrix[0] = glm::translate(glm::mat4(1.0f), camera.position);
+        dir_light1.direction = -glm::normalize(camera.position);
 
         auto draw_gbuffer = [&]()
         {
+            pt_light1.shadow_pass(
+                [&]()
+                {
+                    sponza_model.draw();
+                    cube.draw();
+                });
+
+            dir_light1.shadow_pass(
+                [&]()
+                {
+                    sponza_model.draw();
+                    cube.draw();
+                });
+
             glEnable(GL_DEPTH_TEST);
-            dir_light_depth_map.bind();
-            glCullFace(GL_FRONT);
-            glClear(GL_DEPTH_BUFFER_BIT);
-            glViewport(0, 0, dir_light_depth_map.w, dir_light_depth_map.h);
-            dir_shadow_shader.use();
-            glUniformMatrix4fv(dir_shadow_shader.uniform("light_space"), 1, GL_FALSE, glm::value_ptr(light_space));
-            sponza_model.draw(dir_shadow_shader);
-            dir_light_depth_map.unbind();
-
-            pt_light_depth_map.bind();
-            glCullFace(GL_FRONT);
-            glClear(GL_DEPTH_BUFFER_BIT);
-            glViewport(0, 0, pt_light_depth_map.w, pt_light_depth_map.h);
-            pt_shadow_shader.use();
-            glUniformMatrix4fv(pt_shadow_shader.uniform("shadowMatrices"), 6, GL_FALSE,
-                               glm::value_ptr(shadowTransforms[0]));
-            glUniform3fv(pt_shadow_shader.uniform("lightPos"), 1, glm::value_ptr(lightPos));
-            glUniform1f(pt_shadow_shader.uniform("far_plane"), far);
-            sponza_model.draw(pt_shadow_shader);
-            pt_light_depth_map.unbind();
-
             gbuffer.bind();
             glCullFace(GL_BACK);
             glClearColor(0.0, 0.0, 0.0, 1.0);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glViewport(0, 0, gbuffer.w, gbuffer.h);
             sponza_model.draw(gbuffer_shader);
+            cube.draw(gbuffer_shader);
             gbuffer.unbind();
             glDisable(GL_DEPTH_TEST);
         };
@@ -306,67 +232,43 @@ int glmain()
             glClear(GL_COLOR_BUFFER_BIT);
 
             {
-                pt_light_pass_shader.use();
+                pt_light1.color_pass(
+                    [&]()
+                    {
+                        glUniform3fv(PtLight::color_pass_shader->uniform("camera_pos"), 1, camera.position_gl());
 
-                // set texture uniforms
-                glUniform1i(pt_light_pass_shader.uniform("positions"), 0);
-                glUniform1i(pt_light_pass_shader.uniform("normals"), 1);
-                glUniform1i(pt_light_pass_shader.uniform("colors"), 2);
-                glUniform1i(pt_light_pass_shader.uniform("specs"), 3);
-                glUniform1i(pt_light_pass_shader.uniform("shadow"), 4);
-                glUniform3fv(pt_light_pass_shader.uniform("camera_pos"), 1, camera.position_gl());
-                glUniform3fv(pt_light_pass_shader.uniform("light_pos"), 1, glm::value_ptr(lightPos));
-                glUniform1f(pt_light_pass_shader.uniform("far_plane"), far);
+                        gbuffer.textures[0]->bind(POSITION);
+                        gbuffer.textures[1]->bind(NORMAL);
+                        gbuffer.textures[2]->bind(COLOR);
+                        gbuffer.textures[3]->bind(SPECULAR);
 
-                // bind gbuffer
-                gbuffer.textures[0]->bind(0);
-                gbuffer.textures[1]->bind(1);
-                gbuffer.textures[2]->bind(2);
-                gbuffer.textures[3]->bind(3);
-                pt_light_depth_map.textures[0]->bind(4);
+                        screen.draw(0, 0, glfw.width, glfw.height);
 
-                for (int i = 0; i < 1; i++)
-                {
-                    screen.draw(0, 0, glfw.width, glfw.height);
-                }
-
-                gbuffer.textures[0]->unbind();
-                gbuffer.textures[1]->unbind();
-                gbuffer.textures[2]->unbind();
-                gbuffer.textures[3]->unbind();
-                pt_light_depth_map.textures[0]->unbind();
-
-                pt_light_pass_shader.unuse();
+                        gbuffer.textures[0]->unbind();
+                        gbuffer.textures[1]->unbind();
+                        gbuffer.textures[2]->unbind();
+                        gbuffer.textures[3]->unbind();
+                    });
             }
             {
-                dir_light_pass_shader.use();
-                glUniform1i(dir_light_pass_shader.uniform("positions"), 0);
-                glUniform1i(dir_light_pass_shader.uniform("normals"), 1);
-                glUniform1i(dir_light_pass_shader.uniform("colors"), 2);
-                glUniform1i(dir_light_pass_shader.uniform("specs"), 3);
-                glUniform1i(dir_light_pass_shader.uniform("shadow"), 4);
 
-                glUniform3fv(dir_light_pass_shader.uniform("camera_pos"), 1, camera.position_gl());
-                glUniformMatrix4fv(dir_light_pass_shader.uniform("light_space"), 1, GL_FALSE,
-                                   glm::value_ptr(light_space));
+                dir_light1.color_pass(
+                    [&]()
+                    {
+                        glUniform3fv(DirLight::color_pass_shader->uniform("camera_pos"), 1, camera.position_gl());
 
-                gbuffer.textures[0]->bind(0);
-                gbuffer.textures[1]->bind(1);
-                gbuffer.textures[2]->bind(2);
-                gbuffer.textures[3]->bind(3);
-                dir_light_depth_map.textures[0]->bind(4);
+                        gbuffer.textures[0]->bind(POSITION);
+                        gbuffer.textures[1]->bind(NORMAL);
+                        gbuffer.textures[2]->bind(COLOR);
+                        gbuffer.textures[3]->bind(SPECULAR);
 
-                for (int i = 0; i < 1; i++)
-                {
-                    // screen.draw(0, 0, glfw.width, glfw.height);
-                }
+                        screen.draw(0, 0, glfw.width, glfw.height);
 
-                gbuffer.textures[0]->unbind();
-                gbuffer.textures[1]->unbind();
-                gbuffer.textures[2]->unbind();
-                gbuffer.textures[3]->unbind();
-                dir_light_depth_map.textures[0]->unbind();
-                dir_light_pass_shader.unuse();
+                        gbuffer.textures[0]->unbind();
+                        gbuffer.textures[1]->unbind();
+                        gbuffer.textures[2]->unbind();
+                        gbuffer.textures[3]->unbind();
+                    });
             }
 
             glDisable(GL_BLEND);

@@ -100,6 +100,14 @@ class Model
 
         target_shader.unuse();
     }
+
+    void draw(bool use_material = false)
+    {
+        for (int i = 0; i < meshes.size(); i++)
+        {
+            meshes[i]->draw(ins_matrix, ins_count, materials, use_material);
+        }
+    }
 };
 
 #endif // MODEL_HPP

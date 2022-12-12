@@ -8,6 +8,8 @@ in LIGHT_VS_OUT
 }
 pt_light_fs_in;
 
+uniform int done_shadow;
+
 uniform sampler2D positions;
 uniform sampler2D normals;
 uniform sampler2D colors;
@@ -16,13 +18,13 @@ uniform samplerCube shadow;
 uniform vec3 camera_pos;
 uniform float far_plane;
 
-uniform vec3 light_pos = vec3(2, 2, 2);
-uniform vec3 light_color = vec3(1, 1, 1);
+uniform vec3 light_pos;
+uniform vec3 light_color;
 
-uniform float strength = 100;
-uniform float constant = 1;
-uniform float linear = 0.09;
-uniform float quadratic = 0.032;
+uniform float strength;
+uniform float constant;
+uniform float linear;
+uniform float quadratic;
 
 void main()
 {
@@ -51,5 +53,12 @@ void main()
     float current_depth = length(frag_light);
     float shadow_amout = current_depth < closet_depth ? 1.0 : 0.0;
 
-    result = vec4(light_color * strength * attenuation * (shadow_amout * (specular + diffuse) + ambient), 1.0);
+    if (done_shadow == 1)
+    {
+        result = vec4(light_color * strength * attenuation * (shadow_amout * (specular + diffuse) + ambient), 1.0);
+    }
+    else
+    {
+        result = vec4(light_color * strength * attenuation * (1 * (specular + diffuse) + ambient), 1.0);
+    }
 }
