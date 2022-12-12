@@ -19,10 +19,10 @@ class ScreenRect
 
         // gen buffers
         glCreateBuffers(1, &VBO_POS);
-        glNamedBufferData(VBO_POS, sizeof(position), position, GL_STATIC_DRAW);
+        glNamedBufferStorage(VBO_POS, sizeof(position), position, 0);
 
         glCreateBuffers(1, &VBO_UV);
-        glNamedBufferData(VBO_UV, sizeof(uvs), uvs, GL_STATIC_DRAW);
+        glNamedBufferStorage(VBO_UV, sizeof(uvs), uvs, 0);
 
         glCreateVertexArrays(1, &VAO);
         glVertexArrayVertexBuffer(VAO, 0, VBO_POS, 0, 2 * sizeof(float));

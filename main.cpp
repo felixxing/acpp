@@ -20,7 +20,7 @@ int glmain()
     glfw.set_hint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfw.set_hint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfw.set_hint(GLFW_RESIZABLE, GLFW_FALSE);
-    glfw.set_hint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+    glfw.set_hint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_FALSE);
     glfw.load("Renderer");
 
     Texture2D default_tex2d;
@@ -74,11 +74,11 @@ int glmain()
     };
     create_lighting_pass_buffer();
 
-    ScreenRect sreen;
+    ScreenRect screen;
 
     Shader screen_shader;
     Shader gbuffer_shader;
-    Shader dir_light_pass_shader;
+    // Shader dir_light_pass_shader;
     Shader pt_light_pass_shader;
     auto init_shaders = [&]()
     {
@@ -90,11 +90,11 @@ int glmain()
         gbuffer_shader.atatch_module(GL_FRAGMENT_SHADER, "res/shader/new/gbuffer.frag");
         gbuffer_shader.link();
 
-        dir_light_pass_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/new/dir_light_pass.vert");
-        dir_light_pass_shader.atatch_module(GL_FRAGMENT_SHADER, "res/shader/new/dir_light_pass.frag");
-        dir_light_pass_shader.link();
+        // dir_light_pass_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/new/dir_light_pass.vert");
+        // dir_light_pass_shader.atatch_module(GL_FRAGMENT_SHADER, "res/shader/new/dir_light_pass.frag");
+        // dir_light_pass_shader.link();
 
-        pt_light_pass_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/new/pt_light_pass.vert");
+        pt_light_pass_shader.atatch_module(GL_VERTEX_SHADER, "res/shader/new/light.vert");
         pt_light_pass_shader.atatch_module(GL_FRAGMENT_SHADER, "res/shader/new/pt_light_pass.frag");
         pt_light_pass_shader.link();
     };
@@ -186,6 +186,9 @@ int glmain()
             }
         }
 
+        camera.update();
+        camera_ubo.load();
+
         auto draw_gbuffer = [&]()
         {
             glEnable(GL_DEPTH_TEST);
@@ -202,8 +205,33 @@ int glmain()
         };
         draw_gbuffer();
 
-        camera.update();
-        camera_ubo.load();
+        auto ligthing_pass = [&]()
+        {
+            pt_light_pass_shader.use();
+
+            // set texture uniforms
+            glUniform1i(pt_light_pass_shader.uniform("positions"), 0);
+            glUniform1i(pt_light_pass_shader.uniform("normals"), 1);
+            glUniform1i(pt_light_pass_shader.uniform("colors"), 2);
+            glUniform1i(pt_light_pass_shader.uniform("specs"), 3);
+            glUniform3fv(pt_light_pass_shader.uniform("camera_pos"), 1, camera.position_gl());
+
+            // bind gbuffer
+            gbuffer.textures[0]->bind(0);
+            gbuffer.textures[1]->bind(1);
+            gbuffer.textures[2]->bind(2);
+            gbuffer.textures[3]->bind(3);
+
+            screen.draw(0, 0, glfw.width, glfw.height);
+
+            gbuffer.textures[0]->unbind();
+            gbuffer.textures[1]->unbind();
+            gbuffer.textures[2]->unbind();
+            gbuffer.textures[3]->unbind();
+
+            pt_light_pass_shader.unuse();
+        };
+        ligthing_pass();
 
         glfwSwapBuffers(glfw.window);
         frame_timer.finish();
@@ -462,5 +490,5 @@ int main(int argc, char** argv)
      */
     }
 
-    return EXIT_SUCCESS;
+    return glmain();
 }

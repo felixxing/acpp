@@ -19,7 +19,7 @@ class UniformBuff
           size(sizea)
     {
         glCreateBuffers(1, &id);
-        glNamedBufferData(id, size, nullptr, GL_DYNAMIC_DRAW);
+        glNamedBufferStorage(id, size, nullptr, GL_DYNAMIC_STORAGE_BIT);
     }
 
     ~UniformBuff()
@@ -70,7 +70,7 @@ class ShaderStorage
           data(dataa)
     {
         glCreateBuffers(1, &id);
-        glNamedBufferData(id, size, nullptr, GL_DYNAMIC_DRAW);
+        glNamedBufferStorage(id, size, nullptr, GL_DYNAMIC_STORAGE_BIT);
     }
 
     ~ShaderStorage()

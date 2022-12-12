@@ -98,22 +98,22 @@ class Mesh
     void load()
     {
         glCreateBuffers(1, &VBO_POSITION);
-        glNamedBufferData(VBO_POSITION, vertex_count * sizeof(glm::vec3), position, GL_STATIC_DRAW);
+        glNamedBufferStorage(VBO_POSITION, vertex_count * sizeof(glm::vec3), position, 0);
 
         glCreateBuffers(1, &VBO_NORMAL);
-        glNamedBufferData(VBO_NORMAL, vertex_count * sizeof(glm::vec3), normals, GL_STATIC_DRAW);
+        glNamedBufferStorage(VBO_NORMAL, vertex_count * sizeof(glm::vec3), normals, 0);
 
         glCreateBuffers(1, &VBO_UVS);
-        glNamedBufferData(VBO_UVS, vertex_count * sizeof(glm::vec3), uvs, GL_STATIC_DRAW);
+        glNamedBufferStorage(VBO_UVS, vertex_count * sizeof(glm::vec3), uvs, 0);
 
         glCreateBuffers(1, &VBO_COLORS);
-        glNamedBufferData(VBO_COLORS, vertex_count * sizeof(glm::vec4), colors, GL_STATIC_DRAW);
+        glNamedBufferStorage(VBO_COLORS, vertex_count * sizeof(glm::vec4), colors, 0);
 
         glCreateBuffers(1, &VBO_INSTANCE);
-        glNamedBufferData(VBO_INSTANCE, MAX_INSTANCE * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW);
+        glNamedBufferStorage(VBO_INSTANCE, MAX_INSTANCE * sizeof(glm::mat4), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
         glCreateBuffers(1, &EBO);
-        glNamedBufferData(EBO, index_count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
+        glNamedBufferStorage(EBO, index_count * sizeof(uint32_t), indices, 0);
 
         glCreateVertexArrays(1, &VAO);
         glVertexArrayVertexBuffer(VAO, 0, VBO_POSITION, 0, sizeof(position[0]));

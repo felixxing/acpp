@@ -55,7 +55,6 @@ void main()
     vec3 normal = normalize(texture(normals, light_fs_in.uv).rgb);
     vec3 frag_color = texture(colors, light_fs_in.uv).rgb;
     vec3 frag_spec = texture(specs, light_fs_in.uv).rgb;
-
     vec3 view_dir = normalize(camera_pos - frag_pos);
 
     vec3 light_result = vec3(0);
