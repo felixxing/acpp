@@ -127,7 +127,21 @@ int glmain()
     PtLight pt_light1(1024, 1024);
     pt_light1.light_pos = {0, 70, 0};
 
-    DirLight dir_light1(2048, 2048);
+    DirLight dir_light1(4096, 4096);
+
+    pt_light1.shadow_pass(
+        [&]()
+        {
+            sponza_model.draw();
+            cube.draw();
+        });
+
+    dir_light1.shadow_pass(
+        [&]()
+        {
+            sponza_model.draw();
+            cube.draw();
+        });
 
     glEnable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -195,20 +209,6 @@ int glmain()
 
         auto draw_gbuffer = [&]()
         {
-            pt_light1.shadow_pass(
-                [&]()
-                {
-                    sponza_model.draw();
-                    cube.draw();
-                });
-
-            dir_light1.shadow_pass(
-                [&]()
-                {
-                    sponza_model.draw();
-                    cube.draw();
-                });
-
             glEnable(GL_DEPTH_TEST);
             gbuffer.bind();
             glCullFace(GL_BACK);
@@ -224,6 +224,11 @@ int glmain()
 
         auto ligthing_pass = [&]()
         {
+            gbuffer.textures[0]->bind(POSITION);
+            gbuffer.textures[1]->bind(NORMAL);
+            gbuffer.textures[2]->bind(COLOR);
+            gbuffer.textures[3]->bind(SPECULAR);
+
             light_pass_buffer.bind();
             glEnable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ONE);
@@ -233,37 +238,20 @@ int glmain()
                 [&]()
                 {
                     glUniform3fv(PtLight::color_pass_shader->uniform("camera_pos"), 1, camera.position_gl());
-
-                    gbuffer.textures[0]->bind(POSITION);
-                    gbuffer.textures[1]->bind(NORMAL);
-                    gbuffer.textures[2]->bind(COLOR);
-                    gbuffer.textures[3]->bind(SPECULAR);
-
                     screen.draw(0, 0, glfw.width, glfw.height);
-
-                    gbuffer.textures[0]->unbind();
-                    gbuffer.textures[1]->unbind();
-                    gbuffer.textures[2]->unbind();
-                    gbuffer.textures[3]->unbind();
                 });
 
             dir_light1.color_pass(
                 [&]()
                 {
                     glUniform3fv(DirLight::color_pass_shader->uniform("camera_pos"), 1, camera.position_gl());
-
-                    gbuffer.textures[0]->bind(POSITION);
-                    gbuffer.textures[1]->bind(NORMAL);
-                    gbuffer.textures[2]->bind(COLOR);
-                    gbuffer.textures[3]->bind(SPECULAR);
-
                     screen.draw(0, 0, glfw.width, glfw.height);
-
-                    gbuffer.textures[0]->unbind();
-                    gbuffer.textures[1]->unbind();
-                    gbuffer.textures[2]->unbind();
-                    gbuffer.textures[3]->unbind();
                 });
+
+            gbuffer.textures[0]->unbind();
+            gbuffer.textures[1]->unbind();
+            gbuffer.textures[2]->unbind();
+            gbuffer.textures[3]->unbind();
 
             glDisable(GL_BLEND);
             light_pass_buffer.unbind();

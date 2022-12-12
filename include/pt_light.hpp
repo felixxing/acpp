@@ -130,7 +130,6 @@ class PtLight
 
         if (!pt_light_ready)
         {
-            std::cout<<2222;
             glEnable(GL_CULL_FACE);
             PtLight::shadow_pass_shader = new Shader;
             PtLight::color_pass_shader = new Shader;
