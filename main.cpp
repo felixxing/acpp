@@ -68,7 +68,6 @@ int glmain()
         create_info.width = light_pass_buffer.w;
         create_info.height = light_pass_buffer.h;
         light_pass_buffer.attach_texture(create_info, GL_COLOR_ATTACHMENT0);
-        // light_pass_buffer.attach_rbo(GL_DEPTH_ATTACHMENT, GL_DEPTH24_STENCIL8);
 
         light_pass_buffer_validation = light_pass_buffer.validate();
     };
