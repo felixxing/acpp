@@ -35,6 +35,8 @@ class DirLight
     DirLight(int shadow_w, int shadow_h)
         : light_space_depth(shadow_w, shadow_h)
     {
+        init();
+
         Texture2DCreateInfo depth_create_info;
         depth_create_info.internal_format = GL_DEPTH_COMPONENT32;
         depth_create_info.wrap_s = GL_CLAMP_TO_EDGE;

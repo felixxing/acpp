@@ -124,10 +124,9 @@ int glmain()
     Timer frame_timer;
     glfwSetInputMode(glfw.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    PtLight::init();
     PtLight pt_light1(1024, 1024);
+    pt_light1.light_pos = {0, 70, 0};
 
-    DirLight::init();
     DirLight dir_light1(2048, 2048);
 
     glEnable(GL_CULL_FACE);
@@ -193,7 +192,6 @@ int glmain()
         camera.update();
         camera_ubo.load();
         cube.ins_matrix[0] = glm::translate(glm::mat4(1.0f), camera.position);
-        dir_light1.direction = -glm::normalize(camera.position);
 
         auto draw_gbuffer = [&]()
         {

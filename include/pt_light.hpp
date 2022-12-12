@@ -35,6 +35,8 @@ class PtLight
     PtLight(int shadow_w, int shadow_h)
         : light_space_depth(shadow_w, shadow_h)
     {
+        init();
+
         Texture2DCreateInfo depth_create_info;
         depth_create_info.internal_format = GL_DEPTH_COMPONENT16;
         depth_create_info.wrap_s = GL_CLAMP_TO_EDGE;
@@ -128,6 +130,7 @@ class PtLight
 
         if (!pt_light_ready)
         {
+            std::cout<<2222;
             glEnable(GL_CULL_FACE);
             PtLight::shadow_pass_shader = new Shader;
             PtLight::color_pass_shader = new Shader;
