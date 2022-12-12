@@ -21,7 +21,7 @@ class Model
     Model(std::string file_path)
     {
         Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFile(file_path, aiProcess_Triangulate);
+        const aiScene* scene = importer.ReadFile(file_path, aiProcess_Triangulate | aiProcess_GenNormals);
 
         if (scene == nullptr)
         {
