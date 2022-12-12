@@ -159,11 +159,14 @@ class Mesh
         glDrawElementsInstanced(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, 0, count);
         glBindVertexArray(0);
 
-        materials[material_index]->diff_map.unbind();
-        materials[material_index]->spec_map.unbind();
-        materials[material_index]->ambi_map.unbind();
-        materials[material_index]->emis_map.unbind();
-        materials[material_index]->opac_map.unbind();
+        if (use_material)
+        {
+            materials[material_index]->diff_map.unbind();
+            materials[material_index]->spec_map.unbind();
+            materials[material_index]->ambi_map.unbind();
+            materials[material_index]->emis_map.unbind();
+            materials[material_index]->opac_map.unbind();
+        }
     }
 };
 

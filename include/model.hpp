@@ -101,11 +101,11 @@ class Model
         target_shader.unuse();
     }
 
-    void draw(bool use_material = false)
+    void draw()
     {
         for (int i = 0; i < meshes.size(); i++)
         {
-            meshes[i]->draw(ins_matrix, ins_count, materials, use_material);
+            meshes[i]->draw(ins_matrix, ins_count, materials, false);
         }
     }
 };
