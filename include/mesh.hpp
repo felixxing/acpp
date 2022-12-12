@@ -142,15 +142,18 @@ class Mesh
         }
     }
 
-    void draw(glm::mat4* ins_matrix, uint32_t count, std::vector<Material*>& materials)
+    void draw(glm::mat4* ins_matrix, uint32_t count, std::vector<Material*>& materials, bool use_material = true)
     {
         glNamedBufferSubData(VBO_INSTANCE, 0, count * sizeof(glm::mat4), ins_matrix);
 
-        materials[material_index]->diff_map.bind(0);
-        materials[material_index]->spec_map.bind(1);
-        materials[material_index]->ambi_map.bind(2);
-        materials[material_index]->emis_map.bind(3);
-        materials[material_index]->opac_map.bind(4);
+        if (use_material)
+        {
+            materials[material_index]->diff_map.bind(0);
+            materials[material_index]->spec_map.bind(1);
+            materials[material_index]->ambi_map.bind(2);
+            materials[material_index]->emis_map.bind(3);
+            materials[material_index]->opac_map.bind(4);
+        }
 
         glBindVertexArray(VAO);
         glDrawElementsInstanced(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, 0, count);

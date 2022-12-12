@@ -102,8 +102,8 @@ int main(int argc, char** argv)
     double m_y_p = m_y;
 
     // shadow works
-    const int shadow_w = 8102;
-    const int shadow_h = 8102;
+    const int shadow_w = 4096;
+    const int shadow_h = 4096;
     Framebuffer depth_buffer(shadow_w, shadow_h);
     Texture2DCreateInfo depth_create_info;
     depth_create_info.internal_format = GL_DEPTH_COMPONENT32F;
