@@ -49,7 +49,7 @@ int glmain()
         gbuffer.attach_texture(create_info, GL_COLOR_ATTACHMENT3);
 
         // depth
-        create_info.internal_format = GL_DEPTH_COMPONENT24;
+        create_info.internal_format = GL_DEPTH_COMPONENT32;
         create_info.wrap_s = GL_CLAMP_TO_BORDER;
         create_info.wrap_r = GL_CLAMP_TO_BORDER;
         create_info.wrap_t = GL_CLAMP_TO_BORDER;
@@ -105,9 +105,21 @@ int glmain()
     };
     init_shaders();
 
-    Model<1> sponza_model("res/model/sponza/sponza.obj");
-    sponza_model.ins_count = 1;
-    sponza_model.ins_matrix[0] = glm::scale(glm::mat4(1.0f), {0.1f, 0.1f, 0.1f});
+    Model<20> sponza_model("res/model/cube/cube.obj");
+    sponza_model.ins_count = 8;
+    sponza_model.ins_matrix[0] = glm::scale(glm::mat4(1.0f), {20.0f, 0.1f, 20.0f});
+    sponza_model.ins_matrix[1] = glm::translate(glm::mat4(1.0f), {5, 5, 5});
+    sponza_model.ins_matrix[2] = glm::translate(glm::mat4(1.0f), {0.0f, 0.5f, 0.0f});
+
+    sponza_model.ins_matrix[3] = glm::scale(glm::translate(glm::mat4(1.0f), {0.0f, 10.0f, 0.0f}), {20.0f, 0.1f, 20.0f});
+
+    sponza_model.ins_matrix[4] = glm::scale(glm::translate(glm::mat4(1.0f), {10.0f, 0.0f, 0.0f}), {0.1f, 20.0f, 20.0f});
+    sponza_model.ins_matrix[5] =
+        glm::scale(glm::translate(glm::mat4(1.0f), {-10.0f, 0.0f, 0.0f}), {0.1f, 20.0f, 20.0f});
+
+    sponza_model.ins_matrix[6] = glm::scale(glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, 10.0f}), {20.0f, 20.0f, 0.1f});
+    sponza_model.ins_matrix[7] =
+        glm::scale(glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, -10.0f}), {20.0f, 20.0f, 0.1f});
 
     Camera camera;
     camera.x = 0;
@@ -137,7 +149,7 @@ int glmain()
     const int shadow_h = 4096;
     Framebuffer dir_light_depth_map(shadow_w, shadow_h);
     Texture2DCreateInfo depth_create_info;
-    depth_create_info.internal_format = GL_DEPTH_COMPONENT24;
+    depth_create_info.internal_format = GL_DEPTH_COMPONENT32;
     depth_create_info.wrap_s = GL_CLAMP_TO_BORDER;
     depth_create_info.wrap_r = GL_CLAMP_TO_BORDER;
     depth_create_info.wrap_t = GL_CLAMP_TO_BORDER;
@@ -163,7 +175,7 @@ int glmain()
     const int pt_shadow_w = 1024;
     const int pt_shadow_h = 1024;
     Framebuffer pt_light_depth_map(pt_shadow_w, pt_shadow_h);
-    depth_create_info.internal_format = GL_DEPTH_COMPONENT24;
+    depth_create_info.internal_format = GL_DEPTH_COMPONENT32;
     depth_create_info.wrap_s = GL_CLAMP_TO_BORDER;
     depth_create_info.wrap_r = GL_CLAMP_TO_BORDER;
     depth_create_info.wrap_t = GL_CLAMP_TO_BORDER;
@@ -180,9 +192,9 @@ int glmain()
     pt_shadow_shader.atatch_module(GL_GEOMETRY_SHADER, "res/shader/new/pt_shadow.geom");
     pt_shadow_shader.atatch_module(GL_FRAGMENT_SHADER, "res/shader/new/pt_shadow.frag");
     pt_shadow_shader.link();
-    
+
     float aspect = (float)pt_shadow_w / (float)pt_shadow_h;
-    float near = 1.0f;
+    float near = 0.1f;
     float far = 1000.0f;
     glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), aspect, near, far);
 
@@ -282,8 +294,8 @@ int glmain()
             pt_shadow_shader.use();
             glUniformMatrix4fv(pt_shadow_shader.uniform("shadowMatrices"), 6, GL_FALSE,
                                glm::value_ptr(shadowTransforms[0]));
-            glUniform3fv(pt_shadow_shader.uniform("lightPos"), 1, glm::value_ptr(glm::vec3(2, 2, 2)));
-            glUniform1f(pt_shadow_shader.uniform("far_plane"), 1000.0f);
+            glUniform3fv(pt_shadow_shader.uniform("lightPos"), 1, glm::value_ptr(lightPos));
+            glUniform1f(pt_shadow_shader.uniform("far_plane"), far);
             sponza_model.draw(pt_shadow_shader);
             pt_light_depth_map.unbind();
 
@@ -313,13 +325,17 @@ int glmain()
                 glUniform1i(pt_light_pass_shader.uniform("normals"), 1);
                 glUniform1i(pt_light_pass_shader.uniform("colors"), 2);
                 glUniform1i(pt_light_pass_shader.uniform("specs"), 3);
+                glUniform1i(pt_light_pass_shader.uniform("shadow"), 4);
                 glUniform3fv(pt_light_pass_shader.uniform("camera_pos"), 1, camera.position_gl());
+                glUniform3fv(pt_light_pass_shader.uniform("light_pos"), 1, glm::value_ptr(lightPos));
+                glUniform1f(pt_light_pass_shader.uniform("far_plane"), far);
 
                 // bind gbuffer
                 gbuffer.textures[0]->bind(0);
                 gbuffer.textures[1]->bind(1);
                 gbuffer.textures[2]->bind(2);
                 gbuffer.textures[3]->bind(3);
+                pt_light_depth_map.textures[0]->bind(4);
 
                 for (int i = 0; i < 1; i++)
                 {
@@ -330,6 +346,7 @@ int glmain()
                 gbuffer.textures[1]->unbind();
                 gbuffer.textures[2]->unbind();
                 gbuffer.textures[3]->unbind();
+                pt_light_depth_map.textures[0]->unbind();
 
                 pt_light_pass_shader.unuse();
             }
@@ -353,7 +370,7 @@ int glmain()
 
                 for (int i = 0; i < 1; i++)
                 {
-                    screen.draw(0, 0, glfw.width, glfw.height);
+                    // screen.draw(0, 0, glfw.width, glfw.height);
                 }
 
                 gbuffer.textures[0]->unbind();
@@ -368,6 +385,8 @@ int glmain()
             light_pass_buffer.unbind();
         };
         ligthing_pass();
+
+        std::cout << camera.position.x << " " << camera.position.y << " " << camera.position.z << std::endl;
 
         glClear(GL_COLOR_BUFFER_BIT);
         screen_shader.use();
