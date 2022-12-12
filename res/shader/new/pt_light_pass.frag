@@ -17,7 +17,7 @@ uniform vec3 camera_pos;
 uniform vec3 light_pos = vec3(2, 2, 2);
 uniform vec3 light_color = vec3(1, 1, 1);
 
-uniform float strength = 1;
+uniform float strength = 10;
 uniform float constant = 1;
 uniform float linear = 0.09;
 uniform float quadratic = 0.032;

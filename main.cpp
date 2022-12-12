@@ -35,6 +35,7 @@ int glmain()
         for (int i = 0; i < 4; i++)
         {
             Texture2DCreateInfo create_info;
+            create_info.internal_format = GL_RGBA16F;
             create_info.levels = 1;
             create_info.min_filter = GL_LINEAR;
             create_info.width = gbuffer.w;
@@ -63,6 +64,7 @@ int glmain()
     auto create_lighting_pass_buffer = [&]()
     {
         Texture2DCreateInfo create_info;
+        create_info.internal_format = GL_RGBA16F;
         create_info.levels = 1;
         create_info.min_filter = GL_LINEAR;
         create_info.width = light_pass_buffer.w;
