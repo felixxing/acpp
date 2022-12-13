@@ -235,12 +235,14 @@ int glmain()
                     sponza_model.draw();
                     cube.draw();
                 });
+
             pt_light2.shadow_pass(
                 [&]()
                 {
                     sponza_model.draw();
                     cube.draw();
                 });
+
             pt_light3.shadow_pass(
                 [&]()
                 {
@@ -276,6 +278,7 @@ int glmain()
                     glUniform3fv(PtLight::color_pass_shader->uniform("camera_pos"), 1, camera.position_gl());
                     screen.draw(0, 0, glfw.width, glfw.height);
                 });
+
             pt_light3.color_pass(
                 [&]()
                 {
