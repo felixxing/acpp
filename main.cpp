@@ -124,17 +124,11 @@ int glmain()
     Timer frame_timer;
     glfwSetInputMode(glfw.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    PtLight pt_light1(1024, 1024);
+    PtLight pt_light1(256, 256);
     pt_light1.light_pos = {0, 70, 0};
+    pt_light1.far = 200;
 
-    DirLight dir_light1(10000, 10000);
-
-    pt_light1.shadow_pass(
-        [&]()
-        {
-            sponza_model.draw();
-            cube.draw();
-        });
+    DirLight dir_light1(2048, 2048);
 
     glEnable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -214,6 +208,13 @@ int glmain()
             glDisable(GL_DEPTH_TEST);
 
             dir_light1.shadow_pass(
+                [&]()
+                {
+                    sponza_model.draw();
+                    cube.draw();
+                });
+
+            pt_light1.shadow_pass(
                 [&]()
                 {
                     sponza_model.draw();

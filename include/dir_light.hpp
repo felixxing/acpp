@@ -38,11 +38,12 @@ class DirLight
         init();
 
         Texture2DCreateInfo depth_create_info;
-        depth_create_info.internal_format = GL_DEPTH_COMPONENT32;
+        depth_create_info.internal_format = GL_DEPTH_COMPONENT24;
         depth_create_info.wrap_s = GL_CLAMP_TO_EDGE;
         depth_create_info.wrap_r = GL_CLAMP_TO_EDGE;
         depth_create_info.wrap_t = GL_CLAMP_TO_EDGE;
-        depth_create_info.min_filter = GL_LINEAR;
+        depth_create_info.min_filter = GL_NEAREST;
+        depth_create_info.mag_filter = GL_NEAREST;
         depth_create_info.width = shadow_w;
         depth_create_info.height = shadow_h;
         depth_create_info.levels = 1;
