@@ -137,7 +137,7 @@ int glmain()
     pt_light1.light_pos = {0, 70, 0};
     pt_light1.light_color = {1, 0, 0};
 
-    pt_light3.light_pos = {0, 1, 0};
+    pt_light3.light_pos = {0, 20, 0};
     pt_light3.light_color = {0, 1, 0};
 
     DirLight dir_light1(4096, 4096);
