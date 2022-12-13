@@ -127,16 +127,9 @@ int glmain()
     PtLight pt_light1(1024, 1024);
     pt_light1.light_pos = {0, 70, 0};
 
-    DirLight dir_light1(4096, 4096);
+    DirLight dir_light1(10000, 10000);
 
     pt_light1.shadow_pass(
-        [&]()
-        {
-            sponza_model.draw();
-            cube.draw();
-        });
-
-    dir_light1.shadow_pass(
         [&]()
         {
             sponza_model.draw();
@@ -219,11 +212,19 @@ int glmain()
             cube.draw(gbuffer_shader);
             gbuffer.unbind();
             glDisable(GL_DEPTH_TEST);
+
+            dir_light1.shadow_pass(
+                [&]()
+                {
+                    sponza_model.draw();
+                    cube.draw();
+                });
         };
         draw_gbuffer();
 
         auto ligthing_pass = [&]()
         {
+            glCullFace(GL_BACK);
             gbuffer.textures[0]->bind(POSITION);
             gbuffer.textures[1]->bind(NORMAL);
             gbuffer.textures[2]->bind(COLOR);
