@@ -16,7 +16,7 @@
 
 int glmain()
 {
-    GLWindow glfw(1920, 1080);
+    GLWindow glfw(2560, 1440);
     glfw.set_hint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfw.set_hint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfw.set_hint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -130,18 +130,42 @@ int glmain()
     Timer frame_timer;
     glfwSetInputMode(glfw.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    PtLight pt_light1(512, 512);
-    PtLight pt_light2(512, 512);
-    PtLight pt_light3(512, 512);
+    PtLight pt_light1(1024, 1024);
+    PtLight pt_light2(1024, 1024);
+    PtLight pt_light3(1024, 1024);
 
     pt_light1.far = 200;
-    pt_light1.light_pos = {0, 70, 0};
+    pt_light1.light_pos = {0, 60, 0};
     pt_light1.light_color = {1, 0, 0};
 
-    pt_light3.light_pos = {0, 20, 0};
+    pt_light2.light_pos = {0, 20, 0};
+    pt_light2.light_color = {0, 0, 1};
+
+    pt_light3.light_pos = {0, 40, 0};
     pt_light3.light_color = {0, 1, 0};
 
-    DirLight dir_light1(4096, 4096);
+    DirLight dir_light1(8102, 8102);
+
+    pt_light1.shadow_pass(
+        [&]()
+        {
+            sponza_model.draw();
+            cube.draw();
+        });
+
+    pt_light2.shadow_pass(
+        [&]()
+        {
+            sponza_model.draw();
+            cube.draw();
+        });
+
+    pt_light3.shadow_pass(
+        [&]()
+        {
+            sponza_model.draw();
+            cube.draw();
+        });
 
     glEnable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -207,7 +231,7 @@ int glmain()
         camera_ubo.load();
         if (glfwGetKey(glfw.window, GLFW_KEY_E) != GLFW_PRESS)
         {
-            cube.ins_matrix[0] = glm::translate(glm::mat4(1.0f), camera.position);
+            cube.ins_matrix[0] = glm::scale(glm::translate(glm::mat4(1.0f), camera.position), {5, 5, 5});
         }
 
         auto draw_gbuffer = [&]()
@@ -224,27 +248,6 @@ int glmain()
             glDisable(GL_DEPTH_TEST);
 
             dir_light1.shadow_pass(
-                [&]()
-                {
-                    sponza_model.draw();
-                    cube.draw();
-                });
-
-            pt_light1.shadow_pass(
-                [&]()
-                {
-                    sponza_model.draw();
-                    cube.draw();
-                });
-
-            pt_light2.shadow_pass(
-                [&]()
-                {
-                    sponza_model.draw();
-                    cube.draw();
-                });
-
-            pt_light3.shadow_pass(
                 [&]()
                 {
                     sponza_model.draw();
