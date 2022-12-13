@@ -93,6 +93,13 @@ class Mesh
         delete[] indices;
 
         glDeleteVertexArrays(1, &VAO);
+
+        glDeleteBuffers(1, &VBO_POSITION);
+        glDeleteBuffers(1, &VBO_NORMAL);
+        glDeleteBuffers(1, &VBO_UVS);
+        glDeleteBuffers(1, &VBO_COLORS);
+        glDeleteBuffers(1, &VBO_INSTANCE);
+        glDeleteBuffers(1, &EBO);
     }
 
     void load()

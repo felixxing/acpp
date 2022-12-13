@@ -24,6 +24,10 @@ class UniformBuff
 
     ~UniformBuff()
     {
+        glBindBuffer(GL_UNIFORM_BUFFER, id);
+        glBindBufferRange(GL_UNIFORM_BUFFER, index, 0, 0, 0);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
         glDeleteBuffers(1, &id);
     }
 
