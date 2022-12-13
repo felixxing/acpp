@@ -117,7 +117,7 @@ class Mesh
         glNamedBufferStorage(VBO_COLORS, vertex_count * sizeof(glm::vec4), colors, 0);
 
         glCreateBuffers(1, &VBO_INSTANCE);
-        glNamedBufferStorage(VBO_INSTANCE, MAX_INSTANCE * sizeof(glm::mat4), nullptr, GL_MAP_WRITE_BIT);
+        glNamedBufferStorage(VBO_INSTANCE, MAX_INSTANCE * sizeof(glm::mat4), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
         glCreateBuffers(1, &EBO);
         glNamedBufferStorage(EBO, index_count * sizeof(uint32_t), indices, 0);
@@ -151,9 +151,7 @@ class Mesh
 
     void draw(glm::mat4* ins_matrix, uint32_t count, std::vector<Material*>& materials, bool use_material = true)
     {
-        void* data = glMapNamedBuffer(VBO_INSTANCE, GL_WRITE_ONLY);
-        memcpy(data, ins_matrix, count * sizeof(glm::mat4));
-        glUnmapNamedBuffer(VBO_INSTANCE);
+        glNamedBufferSubData(VBO_INSTANCE, 0, count * sizeof(glm::mat4), ins_matrix);
 
         if (use_material)
         {
@@ -165,7 +163,7 @@ class Mesh
         }
 
         glBindVertexArray(VAO);
-        glDrawElementsInstanced(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, nullptr, count);
+        glDrawElementsInstanced(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, 0, count);
         glBindVertexArray(0);
 
         if (use_material)
