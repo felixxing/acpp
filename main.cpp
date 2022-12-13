@@ -18,7 +18,7 @@ int glmain()
 {
     GLWindow glfw(1920, 1080);
     glfw.set_hint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfw.set_hint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfw.set_hint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfw.set_hint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfw.set_hint(GLFW_RESIZABLE, GLFW_FALSE);
     glfw.set_hint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_FALSE);
