@@ -101,8 +101,8 @@ int glmain()
     sponza_model.ins_matrix[0] = glm::scale(glm::mat4(1.0f), {0.1f, 0.1f, 0.1f});
 
     Model<5000> cube("res/model/cube/cube.obj");
-    cube.ins_count = 5000;
-    for (int i = 1; i < 5000; i++)
+    cube.ins_count = cube.max_ins;
+    for (int i = 1; i < cube.max_ins; i++)
     {
         cube.ins_matrix[i] =
             glm::translate(glm::mat4(1.0f), {get_random(-100, 100), get_random(200), get_random(-100, 100)});
