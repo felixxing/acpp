@@ -118,7 +118,6 @@ inline void GLWindow::load(std::string window_name)
     glfwSwapInterval(0);
 
     glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_TEXTURE_2D);
     glDebugMessageCallback(message_callback, nullptr);
 }
 
