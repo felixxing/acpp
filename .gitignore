@@ -34,4 +34,4 @@
 # folder
 build/
 .cache/
-acpp.trace
+*.trace

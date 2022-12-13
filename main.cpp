@@ -21,7 +21,7 @@ int glmain()
     glfw.set_hint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfw.set_hint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfw.set_hint(GLFW_RESIZABLE, GLFW_FALSE);
-    glfw.set_hint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_FALSE);
+    glfw.set_hint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
     glfw.load("Renderer");
 
     Texture2D default_tex2d;
@@ -100,7 +100,7 @@ int glmain()
     sponza_model.ins_count = 1;
     sponza_model.ins_matrix[0] = glm::scale(glm::mat4(1.0f), {0.1f, 0.1f, 0.1f});
 
-    Model<800> cube("res/model/cube/cube.obj");
+    Model<1000> cube("res/model/cube/cube.obj");
     cube.ins_count = cube.max_ins;
     for (int i = 1; i < cube.max_ins; i++)
     {
