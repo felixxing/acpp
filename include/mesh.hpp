@@ -151,7 +151,7 @@ class Mesh
 
     void draw(glm::mat4* ins_matrix, uint32_t count, std::vector<Material*>& materials, bool use_material = true)
     {
-        glNamedBufferSubData(VBO_INSTANCE, 0, count * sizeof(glm::mat4), ins_matrix);
+        glNamedBufferSubData(VBO_INSTANCE, 0, MAX_INSTANCE * sizeof(glm::mat4), ins_matrix);
 
         if (use_material)
         {
