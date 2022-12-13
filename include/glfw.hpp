@@ -115,7 +115,7 @@ inline void GLWindow::load(std::string window_name)
     {
         printf("Do not init glad");
     }
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
 
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_TEXTURE_2D);
