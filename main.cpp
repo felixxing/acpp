@@ -112,8 +112,8 @@ int glmain()
     Camera camera;
     camera.x = 0;
     camera.y = 0;
-    camera.w = 1920;
-    camera.h = 1080;
+    camera.w = gbuffer.w;
+    camera.h = gbuffer.h;
     camera.position = {-2, 0, 0};
     camera.update();
 

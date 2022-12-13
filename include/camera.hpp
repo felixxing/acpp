@@ -36,11 +36,6 @@ class Camera
         view = glm::lookAt(position, position + front, up);
     }
 
-    void record()
-    {
-        glc(glViewport(x, y, w, h));
-    }
-
     const float* proj_gl() const
     {
         return glm::value_ptr(proj);
