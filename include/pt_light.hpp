@@ -32,8 +32,8 @@ class PtLight
     float linear = 0.09;
     float quadratic = 0.032;
 
-    PtLight(int shadow_w, int shadow_h)
-        : light_space_depth(shadow_w, shadow_h)
+    PtLight(int map_size)
+        : light_space_depth(map_size, map_size)
     {
         init();
 
@@ -44,8 +44,8 @@ class PtLight
         depth_create_info.wrap_t = GL_CLAMP_TO_EDGE;
         depth_create_info.min_filter = GL_NEAREST;
         depth_create_info.mag_filter = GL_NEAREST;
-        depth_create_info.width = shadow_w;
-        depth_create_info.height = shadow_h;
+        depth_create_info.width = map_size;
+        depth_create_info.height = map_size;
         depth_create_info.levels = 1;
         depth_create_info.target_type = GL_TEXTURE_CUBE_MAP;
 

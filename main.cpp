@@ -130,9 +130,9 @@ int glmain()
     Timer frame_timer;
     glfwSetInputMode(glfw.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    PtLight pt_light1(1024, 1024);
-    PtLight pt_light2(1024, 1024);
-    PtLight pt_light3(1024, 1024);
+    PtLight pt_light1(512);
+    PtLight pt_light2(512);
+    PtLight pt_light3(512);
 
     pt_light1.far = 200;
     pt_light1.light_pos = {0, 60, 0};
