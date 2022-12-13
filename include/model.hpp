@@ -82,23 +82,26 @@ class Model
 
     void draw(Shader& target_shader, bool use_material = true)
     {
-        target_shader.use();
-
-        if (use_material)
+        if (ins_count > 0)
         {
-            glUniform1i(target_shader.uniform("diff_map"), 0);
-            glUniform1i(target_shader.uniform("spec_map"), 1);
-            glUniform1i(target_shader.uniform("ambi_map"), 2);
-            glUniform1i(target_shader.uniform("emis_map"), 3);
-            glUniform1i(target_shader.uniform("opac_map"), 4);
-        }
+            target_shader.use();
 
-        for (int i = 0; i < meshes.size(); i++)
-        {
-            meshes[i]->draw(ins_matrix, ins_count, materials, use_material);
-        }
+            if (use_material)
+            {
+                glUniform1i(target_shader.uniform("diff_map"), 0);
+                glUniform1i(target_shader.uniform("spec_map"), 1);
+                glUniform1i(target_shader.uniform("ambi_map"), 2);
+                glUniform1i(target_shader.uniform("emis_map"), 3);
+                glUniform1i(target_shader.uniform("opac_map"), 4);
+            }
 
-        target_shader.unuse();
+            for (int i = 0; i < meshes.size(); i++)
+            {
+                meshes[i]->draw(ins_matrix, ins_count, materials, use_material);
+            }
+
+            target_shader.unuse();
+        }
     }
 
     void draw()
