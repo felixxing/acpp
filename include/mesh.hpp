@@ -163,7 +163,7 @@ class Mesh
         }
 
         glBindVertexArray(VAO);
-        glDrawElementsInstanced(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, 0, count);
+        glDrawElementsInstanced(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, nullptr, count);
         glBindVertexArray(0);
 
         if (use_material)
