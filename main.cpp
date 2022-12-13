@@ -146,27 +146,6 @@ int glmain()
 
     DirLight dir_light1(8102, 8102);
 
-    pt_light1.shadow_pass(
-        [&]()
-        {
-            sponza_model.draw();
-            cube.draw();
-        });
-
-    pt_light2.shadow_pass(
-        [&]()
-        {
-            sponza_model.draw();
-            cube.draw();
-        });
-
-    pt_light3.shadow_pass(
-        [&]()
-        {
-            sponza_model.draw();
-            cube.draw();
-        });
-
     glEnable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     while (!glfwWindowShouldClose(glfw.window))
@@ -248,6 +227,27 @@ int glmain()
             glDisable(GL_DEPTH_TEST);
 
             dir_light1.shadow_pass(
+                [&]()
+                {
+                    sponza_model.draw();
+                    cube.draw();
+                });
+
+            pt_light1.shadow_pass(
+                [&]()
+                {
+                    sponza_model.draw();
+                    cube.draw();
+                });
+
+            pt_light2.shadow_pass(
+                [&]()
+                {
+                    sponza_model.draw();
+                    cube.draw();
+                });
+
+            pt_light3.shadow_pass(
                 [&]()
                 {
                     sponza_model.draw();
