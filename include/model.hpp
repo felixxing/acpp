@@ -50,7 +50,7 @@ class Model
             scene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &rel_path);
             materials[i]->diff_map.create(material_info, prev_path + rel_path.C_Str());
 
-            material_info.internal_format = GL_RGBA16F;
+            material_info.internal_format = GL_SRGB8_ALPHA8;
             scene->mMaterials[i]->GetTexture(aiTextureType_SPECULAR, 0, &rel_path);
             materials[i]->spec_map.create(material_info, prev_path + rel_path.C_Str());
 
@@ -62,7 +62,7 @@ class Model
             scene->mMaterials[i]->GetTexture(aiTextureType_EMISSIVE, 0, &rel_path);
             materials[i]->emis_map.create(material_info, prev_path + rel_path.C_Str());
 
-            material_info.internal_format = GL_RGBA16F;
+            material_info.internal_format = GL_SRGB8_ALPHA8;
             scene->mMaterials[i]->GetTexture(aiTextureType_OPACITY, 0, &rel_path);
             materials[i]->opac_map.create(material_info, prev_path + rel_path.C_Str());
         }
