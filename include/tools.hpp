@@ -69,14 +69,14 @@ inline void Timer::finish()
 inline float get_random(float l, float r)
 {
     static std::default_random_engine eng;
-    static std::uniform_real_distribution dist6(l, r);
+    std::uniform_real_distribution dist6(l, r);
 
     return dist6(eng);
 }
 
 inline float get_random(float r)
 {
-    return get_random(0, r);
+    return get_random(0.0f, r);
 }
 
 #endif // TOOLS_HPP
