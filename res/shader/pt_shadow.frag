@@ -1,4 +1,5 @@
 #version 460 core
+
 in vec4 frag_pos;
 
 uniform vec3 lightPos;

@@ -100,8 +100,13 @@ int glmain()
     sponza_model.ins_count = 1;
     sponza_model.ins_matrix[0] = glm::scale(glm::mat4(1.0f), {0.1f, 0.1f, 0.1f});
 
-    Model<5> cube("res/model/cube/cube.obj");
-    cube.ins_count = 1;
+    Model<5000> cube("res/model/cube/cube.obj");
+    cube.ins_count = 5000;
+    for (int i = 1; i < 5000; i++)
+    {
+        cube.ins_matrix[i] =
+            glm::translate(glm::mat4(1.0f), {get_random(-100, 100), get_random(200), get_random(-100, 100)});
+    }
 
     Camera camera;
     camera.x = 0;
@@ -124,9 +129,16 @@ int glmain()
     Timer frame_timer;
     glfwSetInputMode(glfw.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    PtLight pt_light1(1024, 1024);
-    pt_light1.light_pos = {0, 70, 0};
+    PtLight pt_light1(512, 512);
+    PtLight pt_light2(512, 512);
+    PtLight pt_light3(512, 512);
+
     pt_light1.far = 200;
+    pt_light1.light_pos = {0, 70, 0};
+    pt_light1.light_color = {1, 0, 0};
+
+    pt_light3.light_pos = {0, 1, 0};
+    pt_light3.light_color = {0, 1, 0};
 
     DirLight dir_light1(4096, 4096);
 
@@ -192,7 +204,10 @@ int glmain()
 
         camera.update();
         camera_ubo.load();
-        cube.ins_matrix[0] = glm::translate(glm::mat4(1.0f), camera.position);
+        if (glfwGetKey(glfw.window, GLFW_KEY_E) != GLFW_PRESS)
+        {
+            cube.ins_matrix[0] = glm::translate(glm::mat4(1.0f), camera.position);
+        }
 
         auto draw_gbuffer = [&]()
         {
@@ -220,6 +235,18 @@ int glmain()
                     sponza_model.draw();
                     cube.draw();
                 });
+            pt_light2.shadow_pass(
+                [&]()
+                {
+                    sponza_model.draw();
+                    cube.draw();
+                });
+            pt_light3.shadow_pass(
+                [&]()
+                {
+                    sponza_model.draw();
+                    cube.draw();
+                });
         };
         draw_gbuffer();
 
@@ -237,6 +264,19 @@ int glmain()
             glClear(GL_COLOR_BUFFER_BIT);
 
             pt_light1.color_pass(
+                [&]()
+                {
+                    glUniform3fv(PtLight::color_pass_shader->uniform("camera_pos"), 1, camera.position_gl());
+                    screen.draw(0, 0, glfw.width, glfw.height);
+                });
+
+            pt_light2.color_pass(
+                [&]()
+                {
+                    glUniform3fv(PtLight::color_pass_shader->uniform("camera_pos"), 1, camera.position_gl());
+                    screen.draw(0, 0, glfw.width, glfw.height);
+                });
+            pt_light3.color_pass(
                 [&]()
                 {
                     glUniform3fv(PtLight::color_pass_shader->uniform("camera_pos"), 1, camera.position_gl());

@@ -52,6 +52,9 @@ class PtLight
         light_space_depth.attach_texture(depth_create_info, GL_DEPTH_ATTACHMENT);
         validation = light_space_depth.validate();
 
+        glNamedFramebufferDrawBuffer(light_space_depth.get_id(), GL_NONE);
+        glNamedFramebufferReadBuffer(light_space_depth.get_id(), GL_NONE);
+
         shadow_map = light_space_depth.textures[0];
     }
 

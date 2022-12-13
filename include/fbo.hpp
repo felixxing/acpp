@@ -4,7 +4,6 @@
 #include "gls.hpp"
 #include "texture.hpp"
 
-
 enum GBufferSlot
 {
     POSITION = 0,
@@ -122,6 +121,11 @@ class Framebuffer
     void unbind()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    GLID get_id() const
+    {
+        return id;
     }
 };
 
