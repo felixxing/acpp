@@ -210,7 +210,11 @@ int glmain()
         camera_ubo.load();
         if (glfwGetKey(glfw.window, GLFW_KEY_E) != GLFW_PRESS)
         {
-            cube.ins_matrix[0] = glm::scale(glm::translate(glm::mat4(1.0f), camera.position), {5, 5, 5});
+            cube.ins_matrix[0] =
+                glm::scale(glm::rotate(glm::translate(glm::mat4(1.0f),
+                                                      camera.position + 10.0f * camera.front - glm::vec3(0, 3, 0)),
+                                       glm::radians(camera.yaw), camera.up),
+                           {5, 5, 5});
         }
 
         auto draw_gbuffer = [&]()
