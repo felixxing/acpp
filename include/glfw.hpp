@@ -115,7 +115,7 @@ inline void GLWindow::load(std::string window_name)
     {
         printf("Do not init glad");
     }
-    glfwSwapInterval(0);
+    glfwSwapInterval(1);
 
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(message_callback, nullptr);
