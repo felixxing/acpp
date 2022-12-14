@@ -168,7 +168,7 @@ int glmain()
     pt_light3.light_color = {0, 1, 0};
 
     DirLight dir_light1(8102, 8102);
-    dir_light1.color = {1, 1, 0};
+    dir_light1.color = {1, 1, 1};
 
     bool e_press = false;
 
