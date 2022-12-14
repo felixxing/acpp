@@ -4,7 +4,6 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normals;
 layout(location = 2) in vec3 uvs;
 layout(location = 3) in vec4 colors;
-layout(location = 4) in mat4 model;
 
 layout(std140, binding = 1) uniform cc_mat
 {
@@ -20,6 +19,8 @@ out VS_OUT
     vec4 colors;
 }
 vs_out;
+
+uniform mat4 model;
 
 void main()
 {

@@ -2,6 +2,10 @@
 #include <thread>
 #include <cmath>
 
+#include <FL/Fl.H>
+#include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Hor_Value_Slider.H>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "gls.hpp"
 #include "glfw.hpp"
@@ -16,6 +20,22 @@
 
 int glmain()
 {
+    Fl_Double_Window window(400, 500);
+    window.end();
+    window.show();
+    Fl_Hor_Value_Slider light1_x(40, 0, 200, 30);
+    light1_x.labelsize(22);
+    light1_x.range(-200.0f, 200.0f);
+    Fl_Hor_Value_Slider light1_y(40, 40, 200, 30);
+    light1_y.labelsize(22);
+    light1_y.range(-200.0f, 200.0f);
+    Fl_Hor_Value_Slider light1_z(40, 80, 200, 30);
+    light1_z.labelsize(22);
+    light1_z.range(-200.0f, 200.0f);
+    window.add(light1_x);
+    window.add(light1_y);
+    window.add(light1_z);
+
     GLWindow glfw(1920, 1080);
     glfw.set_hint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfw.set_hint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -109,6 +129,9 @@ int glmain()
             get_random(glm::radians(360.0f)), {get_random(-1, 1), get_random(1), get_random(-1, 1)});
     }
 
+    Model<20> cube3("res/model/cube/cube.obj");
+    cube3.ins_count = 1;
+
     Camera camera;
     camera.x = 0;
     camera.y = 0;
@@ -130,9 +153,9 @@ int glmain()
     Timer frame_timer;
     glfwSetInputMode(glfw.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    PtLight pt_light1(512);
-    PtLight pt_light2(512);
-    PtLight pt_light3(512);
+    PtLight pt_light1(1024);
+    PtLight pt_light2(1024);
+    PtLight pt_light3(1024);
 
     pt_light1.far = 200;
     pt_light1.light_pos = {0, 60, 0};
@@ -153,6 +176,10 @@ int glmain()
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     while (!glfwWindowShouldClose(glfw.window))
     {
+        Fl::flush();
+        pt_light1.light_pos = {light1_x.value(), light1_y.value(), light1_z.value()};
+        cube3.ins_matrix[0] = glm::translate(glm::mat4(1.0f), pt_light1.light_pos);
+
         frame_timer.start();
         glfwPollEvents();
         glfwGetCursorPos(glfw.window, &m_x, &m_y);
@@ -219,6 +246,10 @@ int glmain()
                                        glm::radians(camera.yaw), camera.up),
                            {5, 5, 5});
         }
+        if (glfwGetKey(glfw.window, GLFW_KEY_F) == GLFW_PRESS)
+        {
+            window.show();
+        }
 
         auto draw_gbuffer = [&]()
         {
@@ -230,6 +261,7 @@ int glmain()
             glViewport(0, 0, gbuffer.w, gbuffer.h);
             sponza_model.draw(gbuffer_shader);
             cube.draw(gbuffer_shader);
+            cube3.draw(gbuffer_shader);
             gbuffer.unbind();
             glDisable(GL_DEPTH_TEST);
 
