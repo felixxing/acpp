@@ -34,7 +34,20 @@ int glmain()
     light1_z.range(-200.0f, 200.0f);
     window.add(light1_x);
     window.add(light1_y);
+
     window.add(light1_z);
+    Fl_Hor_Value_Slider lightd_x(40, 200, 200, 30);
+    lightd_x.labelsize(22);
+    lightd_x.range(-1.0f, 1.0f);
+    Fl_Hor_Value_Slider lightd_y(40, 240, 200, 30);
+    lightd_y.labelsize(22);
+    lightd_y.range(-1.0f, 1.0f);
+    Fl_Hor_Value_Slider lightd_z(40, 280, 200, 30);
+    lightd_z.labelsize(22);
+    lightd_z.range(-1.0f, 1.0f);
+    window.add(lightd_x);
+    window.add(lightd_y);
+    window.add(lightd_z);
 
     GLWindow glfw(1920, 1080);
     glfw.set_hint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -178,6 +191,7 @@ int glmain()
     {
         Fl::flush();
         pt_light1.light_pos = {light1_x.value(), light1_y.value(), light1_z.value()};
+        dir_light1.direction = {lightd_x.value(), lightd_y.value(), lightd_z.value()};
         cube3.ins_matrix[0] = glm::translate(glm::mat4(1.0f), pt_light1.light_pos);
 
         frame_timer.start();
@@ -238,7 +252,7 @@ int glmain()
 
         camera.update();
         camera_ubo.load();
-        if (glfwGetMouseButton(glfw.window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+        if (glfwGetMouseButton(glfw.window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
         {
             cube.ins_matrix[0] =
                 glm::scale(glm::rotate(glm::translate(glm::mat4(1.0f),
