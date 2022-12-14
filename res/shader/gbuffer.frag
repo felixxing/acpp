@@ -23,7 +23,8 @@ uniform sampler2D opac_map;
 
 void main()
 {
-    if (texture(opac_map, fs_in.uvs.xy).r <= 0)
+    vec4 oopac = texture(opac_map, fs_in.uvs.xy);
+    if ((oopac.r + oopac.g + oopac.b) * oopac.a <= 0)
     {
         discard;
     }
