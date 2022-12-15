@@ -18,7 +18,7 @@
 #include "pt_light.hpp"
 #include "dir_light.hpp"
 
-int glmain()
+int main(int argc, char** argv)
 {
     Fl_Double_Window window(400, 500);
     window.end();
@@ -373,9 +373,4 @@ int glmain()
 
     glfwTerminate();
     return EXIT_SUCCESS;
-}
-
-int main(int argc, char** argv)
-{
-    return glmain();
 }
