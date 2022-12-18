@@ -6,11 +6,11 @@
     "configurations": [
         {
             "preLaunchTask": "CMake: build",
-            "postDebugTask": "Profile",
+            //"postDebugTask": "Profile",
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${command:cmake.getLaunchTargetPath} ",
+            "program": "${command:cmake.getLaunchTargetPath}",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -35,7 +35,7 @@
             "name": "(gdb) Launch, not building",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${command:cmake.getLaunchTargetPath} ",
+            "program": "${command:cmake.getLaunchTargetPath}",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
