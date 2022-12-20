@@ -28,13 +28,13 @@ class Mesh
     GLID EBO;
 
     uint32_t vertex_count;
-    glm::vec3* position;
-    glm::vec3* normals;
-    glm::vec3* uvs;
-    glm::vec4* colors;
+    std::unique_ptr<glm::vec3[]> position;
+    std::unique_ptr<glm::vec3[]> normals;
+    std::unique_ptr<glm::vec3[]> uvs;
+    std::unique_ptr<glm::vec4[]> colors;
 
     uint32_t index_count;
-    uint32_t* indices;
+    std::unique_ptr<uint32_t[]> indices;
 
     uint32_t material_index;
 
@@ -42,29 +42,29 @@ class Mesh
     Mesh(aiMesh* mesh_res)
     {
         vertex_count = mesh_res->mNumVertices;
-        position = new glm::vec3[vertex_count];
-        normals = new glm::vec3[vertex_count];
-        uvs = new glm::vec3[vertex_count];
-        colors = new glm::vec4[vertex_count];
+        position = std::make_unique<glm::vec3[]>(vertex_count);
+        normals = std::make_unique<glm::vec3[]>(vertex_count);
+        uvs = std::make_unique<glm::vec3[]>(vertex_count);
+        colors = std::make_unique<glm::vec4[]>(vertex_count);
 
         index_count = 3 * mesh_res->mNumFaces;
-        indices = new uint32_t[index_count];
+        indices = std::make_unique<uint32_t[]>(index_count);
 
-        memcpy(position, mesh_res->mVertices, sizeof(glm::vec3) * vertex_count);
-        memcpy(normals, mesh_res->mNormals, sizeof(glm::vec3) * vertex_count);
+        memcpy(position.get(), mesh_res->mVertices, sizeof(glm::vec3) * vertex_count);
+        memcpy(normals.get(), mesh_res->mNormals, sizeof(glm::vec3) * vertex_count);
 
         if (mesh_res->mTextureCoords[0] != nullptr)
         {
-            memcpy(uvs, mesh_res->mTextureCoords[0], vertex_count * sizeof(glm::vec3));
+            memcpy(uvs.get(), mesh_res->mTextureCoords[0], vertex_count * sizeof(glm::vec3));
         }
         else
         {
-            memset(uvs, 0x0, vertex_count * sizeof(glm::vec3));
+            memset(uvs.get(), 0x0, vertex_count * sizeof(glm::vec3));
         }
 
         if (mesh_res->mColors[0] != nullptr)
         {
-            memcpy(colors, mesh_res->mColors[0], vertex_count * sizeof(glm::vec4));
+            memcpy(colors.get(), mesh_res->mColors[0], vertex_count * sizeof(glm::vec4));
         }
         else
         {
@@ -86,12 +86,6 @@ class Mesh
 
     ~Mesh()
     {
-        delete[] position;
-        delete[] normals;
-        delete[] uvs;
-        delete[] colors;
-        delete[] indices;
-
         glDeleteVertexArrays(1, &VAO);
 
         glDeleteBuffers(1, &VBO_POSITION);
@@ -105,22 +99,22 @@ class Mesh
     void load()
     {
         glCreateBuffers(1, &VBO_POSITION);
-        glNamedBufferStorage(VBO_POSITION, vertex_count * sizeof(glm::vec3), position, 0);
+        glNamedBufferStorage(VBO_POSITION, vertex_count * sizeof(glm::vec3), position.get(), 0);
 
         glCreateBuffers(1, &VBO_NORMAL);
-        glNamedBufferStorage(VBO_NORMAL, vertex_count * sizeof(glm::vec3), normals, 0);
+        glNamedBufferStorage(VBO_NORMAL, vertex_count * sizeof(glm::vec3), normals.get(), 0);
 
         glCreateBuffers(1, &VBO_UVS);
-        glNamedBufferStorage(VBO_UVS, vertex_count * sizeof(glm::vec3), uvs, 0);
+        glNamedBufferStorage(VBO_UVS, vertex_count * sizeof(glm::vec3), uvs.get(), 0);
 
         glCreateBuffers(1, &VBO_COLORS);
-        glNamedBufferStorage(VBO_COLORS, vertex_count * sizeof(glm::vec4), colors, 0);
+        glNamedBufferStorage(VBO_COLORS, vertex_count * sizeof(glm::vec4), colors.get(), 0);
 
         glCreateBuffers(1, &VBO_INSTANCE);
         glNamedBufferStorage(VBO_INSTANCE, MAX_INSTANCE * sizeof(glm::mat4), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
         glCreateBuffers(1, &EBO);
-        glNamedBufferStorage(EBO, index_count * sizeof(uint32_t), indices, 0);
+        glNamedBufferStorage(EBO, index_count * sizeof(uint32_t), indices.get(), 0);
 
         glCreateVertexArrays(1, &VAO);
         glVertexArrayVertexBuffer(VAO, 0, VBO_POSITION, 0, sizeof(position[0]));

@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <memory>
 #include <fmt/core.h>
 #include <GLFW/glfw3.h>
 #include <stb/stb_image.h>
