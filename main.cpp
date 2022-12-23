@@ -10,11 +10,11 @@ int main(int argc, char** argv)
     context.glfw_call(glfwWindowHint, GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
     context.create_window("ogl");
 
-    while (!context.glfw_windows_call(glfwWindowShouldClose))
+    while (!context.glfw_window_call(glfwWindowShouldClose))
     {
         context.glfw_call(glfwPollEvents);
 
-        context.glfw_windows_call(glfwSwapBuffers);
+        context.glfw_window_call(glfwSwapBuffers);
     }
 
     return EXIT_SUCCESS;

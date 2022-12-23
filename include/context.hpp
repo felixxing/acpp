@@ -17,7 +17,7 @@ class Context
 
     template <typename Func, typename... Args, //
               typename Return = std::invoke_result_t<Func, decltype(window_), Args...>>
-    inline Return glfw_windows_call(Func func, Args... args)
+    inline Return glfw_window_call(Func func, Args... args)
     {
         return func(window_, args...);
     }
