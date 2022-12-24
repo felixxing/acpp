@@ -58,7 +58,7 @@ class PtLight
         shadow_map = light_space_depth.textures[0];
     }
 
-    void shadow_pass(std::function<void()> draw_calls)
+    void shadow_pass(const std::function<void()>& draw_calls)
     {
         done_shadow = 1;
         float aspect = static_cast<float>(light_space_depth.w) / static_cast<float>(light_space_depth.h);
@@ -106,7 +106,7 @@ class PtLight
         glDisable(GL_DEPTH_TEST);
     }
 
-    void color_pass(std::function<void()> draw_calls)
+    void color_pass(const std::function<void()>& draw_calls)
     {
         color_pass_shader->use();
 

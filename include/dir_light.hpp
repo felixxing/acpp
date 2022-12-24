@@ -57,7 +57,7 @@ class DirLight
         shadow_map = light_space_depth.textures[0];
     }
 
-    void shadow_pass(std::function<void()> draw_calls)
+    void shadow_pass(const std::function<void()>& draw_calls)
     {
         done_shadow = 1;
         light_proj = glm::ortho(rectangle.x, rectangle.y, rectangle.z, rectangle.w, near, far);
@@ -80,7 +80,7 @@ class DirLight
         glDisable(GL_DEPTH_TEST);
     }
 
-    void color_pass(std::function<void()> draw_calls)
+    void color_pass(const std::function<void()>& draw_calls)
     {
         color_pass_shader->use();
         glUniformMatrix4fv(color_pass_shader->uniform("light_space"), 1, GL_FALSE, glm::value_ptr(light_space));
