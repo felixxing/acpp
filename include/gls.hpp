@@ -9,10 +9,9 @@
 #include <unordered_map>
 
 // OpenGl
-#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include "glad/glad.hpp"
-using GLID = GLint;
+using GLID = GLuint;
 
 // GLM
 #define GLM_FORCE_INLINE

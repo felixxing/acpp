@@ -7,6 +7,7 @@ set(CMAKE_CXX_EXTENSIONS off)
 file(GLOB_RECURSE SRC_CPP src/*.cpp)
 add_executable(acpp main.cpp ${SRC_CPP})
 target_compile_options(acpp PUBLIC)
+target_compile_definitions(acpp PUBLIC GLFW_INCLUDE_NONE)
 
 # includes-cpp
 target_include_directories(acpp PUBLIC include)
